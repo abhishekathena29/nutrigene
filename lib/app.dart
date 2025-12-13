@@ -87,33 +87,90 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        body: SafeArea(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: _PageContainer(
+              key: ValueKey(_currentIndex),
+              child: _pages[_currentIndex],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.child_care),
-            label: 'Children',
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: NavigationBar(
+              selectedIndex: _currentIndex,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              onDestinationSelected: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.dashboard_outlined),
+                  selectedIcon: Icon(Icons.dashboard_customize),
+                  label: 'Dashboard',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.child_care_outlined),
+                  selectedIcon: Icon(Icons.child_care),
+                  label: 'Children',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.restaurant_menu_outlined),
+                  selectedIcon: Icon(Icons.restaurant_menu),
+                  label: 'Nutrition',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.psychology_outlined),
+                  selectedIcon: Icon(Icons.psychology),
+                  label: 'Brain',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.more_horiz),
+                  selectedIcon: Icon(Icons.more),
+                  label: 'More',
+                ),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Nutrition',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.psychology), label: 'Brain'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
-        ],
+        ),
       ),
     );
   }
 }
 
+class _PageContainer extends StatelessWidget {
+  const _PageContainer({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return child;
+  }
+}

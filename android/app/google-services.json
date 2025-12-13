@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "936659046488",
+    "project_id": "nutrigene-fcb9e",
+    "storage_bucket": "nutrigene-fcb9e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:936659046488:android:99a76a3fbb137a1b60ba2d",
+        "android_client_info": {
+          "package_name": "com.example.nutritrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLptWfh-Ef4epP8SQvXsOfJaRWOcWVAA8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
