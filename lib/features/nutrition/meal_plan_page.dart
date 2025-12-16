@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/features/nutrition/provider/nutrition_provider.dart';
+import 'package:provider/provider.dart';
 
 class MealPlanPage extends StatefulWidget {
   const MealPlanPage({super.key});
@@ -9,33 +11,22 @@ class MealPlanPage extends StatefulWidget {
 
 class _MealPlanPageState extends State<MealPlanPage> {
   String _selectedDay = 'Monday';
+  bool _didLoad = false;
 
-  final Map<String, Map<String, String>> _mealPlans = {
-    'Monday': {
-      'Breakfast': 'Oatmeal with banana and honey',
-      'Mid-Morning': 'Apple slices with peanut butter',
-      'Lunch': 'Rice with lentils and spinach curry',
-      'Afternoon': 'Yogurt with berries',
-      'Dinner': 'Chicken soup with vegetables',
-    },
-    'Tuesday': {
-      'Breakfast': 'Whole wheat toast with eggs',
-      'Mid-Morning': 'Orange and nuts',
-      'Lunch': 'Chapati with vegetable curry',
-      'Afternoon': 'Milk and cookies',
-      'Dinner': 'Fish with mashed potatoes',
-    },
-    'Wednesday': {
-      'Breakfast': 'Pancakes with fruit',
-      'Mid-Morning': 'Carrot sticks with hummus',
-      'Lunch': 'Rice bowl with beans and avocado',
-      'Afternoon': 'Smoothie with spinach',
-      'Dinner': 'Pasta with tomato sauce',
-    },
-  };
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didLoad) {
+      context.read<NutritionProvider>().loadMealPlans();
+      _didLoad = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<NutritionProvider>();
+    final mealPlan = provider.mealPlans[_selectedDay];
+
     return Scaffold(
       appBar: AppBar(title: const Text('Meal Plans')),
       body: SingleChildScrollView(
@@ -45,22 +36,36 @@ class _MealPlanPageState extends State<MealPlanPage> {
             Container(
               color: Colors.green.shade50,
               padding: const EdgeInsets.all(16.0),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.restaurant_menu, color: Colors.green),
-                  SizedBox(width: 12),
+                  const Icon(Icons.restaurant_menu, color: Colors.green),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'Personalized meal plans for optimal nutrition',
-                      style: TextStyle(color: Colors.green),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Personalized meal plans for optimal nutrition',
+                          style: TextStyle(color: Colors.green),
+                        ),
+                        if (provider.aiError != null)
+                          Text(
+                            provider.aiError!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                      ],
                     ),
+                  ),
+                  IconButton(
+                    onPressed: provider.loadingPlans
+                        ? null
+                        : () => provider.loadMealPlans(),
+                    icon: const Icon(Icons.refresh),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-
-            // Day Selector
             SizedBox(
               height: 50,
               child: ListView(
@@ -78,8 +83,6 @@ class _MealPlanPageState extends State<MealPlanPage> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Meal Plan for Selected Day
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -93,10 +96,10 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (_mealPlans.containsKey(_selectedDay)) ...[
+                  if (mealPlan != null && mealPlan.meals.isNotEmpty) ...[
                     _buildMealCard(
                       'Breakfast',
-                      _mealPlans[_selectedDay]!['Breakfast']!,
+                      mealPlan.meals['Breakfast'] ?? '',
                       '7:00 AM',
                       Icons.wb_sunny,
                       Colors.orange,
@@ -104,7 +107,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     const SizedBox(height: 12),
                     _buildMealCard(
                       'Mid-Morning Snack',
-                      _mealPlans[_selectedDay]!['Mid-Morning']!,
+                      mealPlan.meals['Mid-Morning'] ?? '',
                       '10:00 AM',
                       Icons.coffee,
                       Colors.brown,
@@ -112,7 +115,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     const SizedBox(height: 12),
                     _buildMealCard(
                       'Lunch',
-                      _mealPlans[_selectedDay]!['Lunch']!,
+                      mealPlan.meals['Lunch'] ?? '',
                       '12:30 PM',
                       Icons.lunch_dining,
                       Colors.green,
@@ -120,7 +123,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     const SizedBox(height: 12),
                     _buildMealCard(
                       'Afternoon Snack',
-                      _mealPlans[_selectedDay]!['Afternoon']!,
+                      mealPlan.meals['Afternoon'] ?? '',
                       '3:30 PM',
                       Icons.icecream,
                       Colors.pink,
@@ -128,20 +131,45 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     const SizedBox(height: 12),
                     _buildMealCard(
                       'Dinner',
-                      _mealPlans[_selectedDay]!['Dinner']!,
+                      mealPlan.meals['Dinner'] ?? '',
                       '7:00 PM',
                       Icons.dinner_dining,
                       Colors.blue,
                     ),
-                  ] else
-                    const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Center(
+                    if (mealPlan.aiNote != null &&
+                        mealPlan.aiNote!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Card(
+                        color: Colors.blue.shade50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
                           child: Text(
-                            'Meal plan coming soon for this day!',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                            mealPlan.aiNote!,
+                            style: const TextStyle(color: Colors.blueGrey),
                           ),
+                        ),
+                      ),
+                    ],
+                  ] else
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'No meal plan saved yet',
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: provider.aiBusy
+                                  ? null
+                                  : () => _promptForGeneration(context),
+                              icon: const Icon(Icons.auto_awesome),
+                              label: const Text('Generate with AI'),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -168,9 +196,10 @@ class _MealPlanPageState extends State<MealPlanPage> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Include a variety of colors in meals to ensure diverse nutrients. Each color represents different vitamins and minerals!',
-                            style: TextStyle(color: Colors.blue),
+                          Text(
+                            mealPlan?.aiNote ??
+                                'Include a variety of colors in meals to ensure diverse nutrients.',
+                            style: const TextStyle(color: Colors.blue),
                           ),
                         ],
                       ),
@@ -183,15 +212,70 @@ class _MealPlanPageState extends State<MealPlanPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Generating custom meal plan...')),
-          );
-        },
-        icon: const Icon(Icons.auto_awesome),
+        onPressed:
+            provider.aiBusy ? null : () => _promptForGeneration(context),
+        icon: provider.aiBusy
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.auto_awesome),
         label: const Text('Generate Custom Plan'),
       ),
     );
+  }
+
+  Future<void> _promptForGeneration(BuildContext context) async {
+    final preferencesController = TextEditingController();
+    final ageController = TextEditingController(text: '5 years');
+    final provider = context.read<NutritionProvider>();
+    final shouldGenerate = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Personalize with Gemini'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: ageController,
+              decoration: const InputDecoration(
+                labelText: 'Child age',
+                hintText: 'e.g. 5 years',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: preferencesController,
+              decoration: const InputDecoration(
+                labelText: 'Preferences or restrictions',
+                hintText: 'e.g. vegetarian, no nuts',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Generate'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldGenerate == true) {
+      await provider.generatePlan(
+        day: _selectedDay,
+        childAge: ageController.text,
+        preferences: preferencesController.text.isEmpty
+            ? null
+            : preferencesController.text,
+      );
+    }
   }
 
   Widget _buildDayChip(String day) {
@@ -259,7 +343,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    description,
+                    description.isNotEmpty
+                        ? description
+                        : 'Tap edit to add a meal',
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
@@ -267,16 +353,56 @@ class _MealPlanPageState extends State<MealPlanPage> {
             ),
             IconButton(
               icon: const Icon(Icons.edit, size: 20),
-              onPressed: () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Edit $mealType meal')));
-              },
+              onPressed: () => _editMeal(mealType, description),
             ),
           ],
         ),
       ),
     );
   }
-}
 
+  Future<void> _editMeal(String mealType, String existing) async {
+    final provider = context.read<NutritionProvider>();
+    final controller = TextEditingController(text: existing);
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit $mealType'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Meal description',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave == true) {
+      final current = provider.mealPlans[_selectedDay];
+      final updatedMeals = Map<String, String>.from(
+        current?.meals ??
+            {
+              'Breakfast': '',
+              'Mid-Morning': '',
+              'Lunch': '',
+              'Afternoon': '',
+              'Dinner': '',
+            },
+      );
+      updatedMeals[mealType] = controller.text.trim();
+      await provider.saveMealPlan(
+        MealPlan(day: _selectedDay, meals: updatedMeals, aiNote: current?.aiNote),
+      );
+    }
+  }
+}

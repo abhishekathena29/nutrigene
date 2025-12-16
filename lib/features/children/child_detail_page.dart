@@ -1,133 +1,251 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/features/children/provider/children_provider.dart';
+import 'package:provider/provider.dart';
 
-class ChildDetailPage extends StatelessWidget {
+class ChildDetailPage extends StatefulWidget {
   const ChildDetailPage({super.key});
 
   @override
+  State<ChildDetailPage> createState() => _ChildDetailPageState();
+}
+
+class _ChildDetailPageState extends State<ChildDetailPage> {
+  String? _childId;
+  bool _loadedGrowth = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _childId ??= ModalRoute.of(context)?.settings.arguments as String?;
+    final provider = context.read<ChildrenProvider>();
+    if (provider.children.isEmpty) {
+      provider.loadChildren();
+    } else if (_childId == null && provider.children.isNotEmpty) {
+      _childId = provider.children.first.id;
+    }
+    if (_childId != null && !_loadedGrowth) {
+      provider.loadGrowthRecords(_childId!);
+      _loadedGrowth = true;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final childrenProvider = context.watch<ChildrenProvider>();
+    final child = childrenProvider.getChildById(_childId);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Child Details'),
+        title: Text(child?.name ?? 'Child Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.pushNamed(context, '/child/form');
-            },
+            onPressed: child == null
+                ? null
+                : () {
+                    Navigator.pushNamed(
+                      context,
+                      '/child/form',
+                      arguments: child,
+                    );
+                  },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header Card
-            Container(
-              width: double.infinity,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              padding: const EdgeInsets.all(24.0),
+      body: child == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.pink.withOpacity(0.2),
-                    child: const Icon(Icons.girl, size: 60, color: Colors.pink),
+                  Container(
+                    width: double.infinity,
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.pink.withOpacity(0.2),
+                          child: Icon(
+                            child.gender.toLowerCase().startsWith('f')
+                                ? Icons.girl
+                                : Icons.boy,
+                            size: 60,
+                            color: Colors.pink,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          child.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${child.gender} • DOB: ${child.dob.toLocal().toString().split(' ').first}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Emma Johnson',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '5 years old • Female',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-
-            // Quick Actions Grid
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Quick Actions',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    children: [
-                      _buildActionCard(
-                        context,
-                        icon: Icons.height,
-                        title: 'Growth Input',
-                        color: Colors.green,
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/child/growth-input'),
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.insert_chart,
-                        title: 'Growth Charts',
-                        color: Colors.blue,
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/child/growth-chart'),
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.science,
-                        title: 'Epigenetic Risk',
-                        color: Colors.orange,
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/child/epigenetic'),
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.description,
-                        title: 'Reports',
-                        color: Colors.purple,
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/child/report'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Recent Information
-                  const Text(
-                    'Recent Information',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          _buildInfoRow('Weight', '18.5 kg'),
-                          const Divider(),
-                          _buildInfoRow('Height', '110 cm'),
-                          const Divider(),
-                          _buildInfoRow('MUAC', '16.5 cm'),
-                          const Divider(),
-                          _buildInfoRow('Last Check', '2 days ago'),
-                        ],
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Quick Actions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          children: [
+                            _buildActionCard(
+                              context,
+                              icon: Icons.height,
+                              title: 'Growth Input',
+                              color: Colors.green,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/child/growth-input',
+                                arguments: child.id,
+                              ),
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.insert_chart,
+                              title: 'Growth Charts',
+                              color: Colors.blue,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/child/growth-chart',
+                                arguments: child.id,
+                              ),
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.science,
+                              title: 'Epigenetic Risk',
+                              color: Colors.orange,
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/child/epigenetic'),
+                            ),
+                            _buildActionCard(
+                              context,
+                              icon: Icons.description,
+                              title: 'Reports',
+                              color: Colors.purple,
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/child/report'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Recent Information',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                _buildInfoRow(
+                                  'Guardian',
+                                  child.guardianName.isNotEmpty
+                                      ? child.guardianName
+                                      : '—',
+                                ),
+                                const Divider(),
+                                _buildInfoRow(
+                                  'Contact',
+                                  child.contactNumber.isNotEmpty
+                                      ? child.contactNumber
+                                      : '—',
+                                ),
+                                const Divider(),
+                                _buildInfoRow(
+                                  'Notes',
+                                  child.notes.isNotEmpty ? child.notes : '—',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Growth Records',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...childrenProvider
+                            .getGrowthForChild(child.id)
+                            .map(
+                              (record) => Card(
+                                child: ListTile(
+                                  title: Text(
+                                    'Age: ${record.ageInMonths.toStringAsFixed(1)} months',
+                                  ),
+                                  subtitle: Text(
+                                    'Wt ${record.weight} kg, Ht ${record.height} cm, MUAC ${record.muac} cm',
+                                  ),
+                                  trailing: Text(
+                                    record.date
+                                        .toLocal()
+                                        .toString()
+                                        .split(' ')
+                                        .first,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        if (childrenProvider.getGrowthForChild(child.id).isEmpty)
+                          Card(
+                            child: ListTile(
+                              title: const Text('No growth data yet'),
+                              subtitle: const Text(
+                                'Add a new measurement to start tracking.',
+                              ),
+                              trailing: TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/child/growth-input',
+                                    arguments: child.id,
+                                  );
+                                },
+                                child: const Text('Add'),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -171,13 +289,18 @@ class ChildDetailPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
