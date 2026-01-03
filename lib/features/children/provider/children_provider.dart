@@ -162,8 +162,10 @@ class ChildrenProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final snapshot =
-          await _firestore.collection('children').orderBy('name').get();
+      final snapshot = await _firestore
+          .collection('children')
+          .orderBy('name')
+          .get();
       _children = snapshot.docs.map(ChildProfile.fromDoc).toList();
     } catch (e) {
       _error = 'Unable to load children: $e';
@@ -179,15 +181,12 @@ class ChildrenProvider extends ChangeNotifier {
     try {
       if (child.id.isEmpty) {
         final doc = await _firestore.collection('children').add(child.toMap());
-        _children = [
-          ..._children,
-          child.copyWith(id: doc.id),
-        ];
+        _children = [..._children, child.copyWith(id: doc.id)];
       } else {
-        await _firestore.collection('children').doc(child.id).set(
-              child.toMap(),
-              SetOptions(merge: true),
-            );
+        await _firestore
+            .collection('children')
+            .doc(child.id)
+            .set(child.toMap(), SetOptions(merge: true));
         _children = _children
             .map((c) => c.id == child.id ? child : c)
             .toList(growable: false);
@@ -223,8 +222,9 @@ class ChildrenProvider extends ChangeNotifier {
           .collection('growthRecords')
           .orderBy('date', descending: true)
           .get();
-      _growthRecords[childId] =
-          snapshot.docs.map(GrowthRecord.fromDoc).toList(growable: false);
+      _growthRecords[childId] = snapshot.docs
+          .map(GrowthRecord.fromDoc)
+          .toList(growable: false);
       notifyListeners();
     } catch (e) {
       _error = 'Unable to load growth records: $e';
@@ -242,7 +242,10 @@ class ChildrenProvider extends ChangeNotifier {
           .collection('growthRecords')
           .add(record.toMap());
       final updatedRecord = record.copyWith(id: doc.id);
-      final records = [...(_growthRecords[childId] ?? []), updatedRecord];
+      final List<GrowthRecord> records = [
+        ...(_growthRecords[childId] ?? []),
+        updatedRecord,
+      ];
       _growthRecords[childId] = records;
       notifyListeners();
     } catch (e) {

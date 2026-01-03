@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/app.dart';
 import 'package:nutritrack/firebase_options.dart';
+import 'package:nutritrack/features/auth/provider/auth_provider.dart';
 import 'package:nutritrack/features/children/provider/children_provider.dart';
 import 'package:nutritrack/features/nutrition/provider/nutrition_provider.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthenProvider()),
         ChangeNotifierProvider(create: (_) => ChildrenProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()),
       ],

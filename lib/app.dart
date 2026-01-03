@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/features/auth/login_page.dart';
+import 'package:nutritrack/features/auth/onboarding_page.dart';
+import 'package:nutritrack/features/auth/provider/auth_provider.dart';
+import 'package:nutritrack/features/auth/signup_page.dart';
 import 'package:nutritrack/features/dashboard/dashboard_page.dart';
 import 'package:nutritrack/features/children/children_page.dart';
 import 'package:nutritrack/features/children/child_form_page.dart';
@@ -23,6 +27,8 @@ import 'package:nutritrack/features/ngo/ngo_dashboard_page.dart';
 import 'package:nutritrack/features/common/alerts_page.dart';
 import 'package:nutritrack/features/common/settings_page.dart';
 import 'package:nutritrack/features/common/about_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 class NutriGeneApp extends StatelessWidget {
   const NutriGeneApp({super.key});
@@ -35,7 +41,11 @@ class NutriGeneApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const MainNavigationPage(),
+        '/': (context) => const AuthGate(),
+        '/home': (context) => const MainNavigationPage(),
+        '/onboarding': (context) => const OnboardingPage(),
+        '/login': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
 
         // Children routes
         '/child/form': (context) => const ChildFormPage(),
@@ -62,6 +72,32 @@ class NutriGeneApp extends StatelessWidget {
         '/alerts': (context) => const AlertsPage(),
         '/settings': (context) => const SettingsPage(),
         '/about': (context) => const AboutPage(),
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthenProvider>(
+      builder: (context, auth, _) {
+        return StreamBuilder<User?>(
+          stream: auth.authStateChanges,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasData) {
+              return const MainNavigationPage();
+            }
+            return const OnboardingPage();
+          },
+        );
       },
     );
   }
