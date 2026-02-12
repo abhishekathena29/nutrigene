@@ -40,8 +40,7 @@ class MealPlan {
 
 class NutritionProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _geminiApiKey =
-      const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+  String? _geminiApiKey;
 
   Map<String, MealPlan> _mealPlans = {};
   bool _loadingPlans = false;
@@ -55,6 +54,19 @@ class NutritionProvider extends ChangeNotifier {
   String? get aiError => _aiError;
   String? get symptomAnalysis => _symptomAnalysis;
 
+  Future<String?> _getGeminiApiKey() async {
+    if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
+      return _geminiApiKey;
+    }
+    try {
+      final doc = await _firestore.collection('appConfig').doc('gemini').get();
+      _geminiApiKey = (doc.data()?['apiKey'] as String?)?.trim();
+    } catch (e) {
+      print('Failed to load Gemini API key: $e');
+    }
+    return _geminiApiKey;
+  }
+
   Future<void> loadMealPlans() async {
     _loadingPlans = true;
     notifyListeners();
@@ -64,6 +76,8 @@ class NutritionProvider extends ChangeNotifier {
       _mealPlans = {
         for (final doc in snapshot.docs) doc.id: MealPlan.fromDoc(doc),
       };
+    } catch (e) {
+      print('Failed to load meal plans: $e');
     } finally {
       _loadingPlans = false;
       notifyListeners();
@@ -71,18 +85,28 @@ class NutritionProvider extends ChangeNotifier {
   }
 
   Future<void> saveMealPlan(MealPlan plan) async {
-    await _firestore.collection('mealPlans').doc(plan.day).set(plan.toMap());
-    _mealPlans = {
-      ..._mealPlans,
-      plan.day: plan,
-    };
-    notifyListeners();
+    try {
+      await _firestore.collection('mealPlans').doc(plan.day).set(plan.toMap());
+      _mealPlans = {
+        ..._mealPlans,
+        plan.day: plan,
+      };
+      notifyListeners();
+    } catch (e) {
+      print('Failed to save meal plan: $e');
+      rethrow;
+    }
   }
 
   Future<void> deleteMealPlan(String day) async {
-    await _firestore.collection('mealPlans').doc(day).delete();
-    _mealPlans.remove(day);
-    notifyListeners();
+    try {
+      await _firestore.collection('mealPlans').doc(day).delete();
+      _mealPlans.remove(day);
+      notifyListeners();
+    } catch (e) {
+      print('Failed to delete meal plan: $e');
+      rethrow;
+    }
   }
 
   Future<MealPlan?> generatePlan({
@@ -90,8 +114,9 @@ class NutritionProvider extends ChangeNotifier {
     required String childAge,
     String? preferences,
   }) async {
-    if (_geminiApiKey.isEmpty) {
-      _aiError = 'Gemini API key is missing. Set GEMINI_API_KEY.';
+    final apiKey = await _getGeminiApiKey();
+    if (apiKey == null || apiKey.isEmpty) {
+      _aiError = 'Gemini API key is missing in Firestore.';
       notifyListeners();
       return null;
     }
@@ -103,7 +128,7 @@ class NutritionProvider extends ChangeNotifier {
     try {
       final model = GenerativeModel(
         model: 'gemini-1.5-flash',
-        apiKey: _geminiApiKey,
+        apiKey: apiKey,
       );
       final prompt =
           'Create a simple meal plan for a child aged $childAge for $day. '
@@ -144,6 +169,7 @@ class NutritionProvider extends ChangeNotifier {
       notifyListeners();
       return plan;
     } catch (e) {
+      print('Failed to generate meal plan: $e');
       _aiError = 'AI request failed: $e';
       _aiBusy = false;
       notifyListeners();
@@ -152,8 +178,9 @@ class NutritionProvider extends ChangeNotifier {
   }
 
   Future<void> analyzeSymptoms(List<String> symptoms) async {
-    if (_geminiApiKey.isEmpty) {
-      _aiError = 'Gemini API key is missing. Set GEMINI_API_KEY.';
+    final apiKey = await _getGeminiApiKey();
+    if (apiKey == null || apiKey.isEmpty) {
+      _aiError = 'Gemini API key is missing in Firestore.';
       notifyListeners();
       return;
     }
@@ -163,7 +190,7 @@ class NutritionProvider extends ChangeNotifier {
     try {
       final model = GenerativeModel(
         model: 'gemini-1.5-flash',
-        apiKey: _geminiApiKey,
+        apiKey: apiKey,
       );
       final prompt = '''
 You are a pediatric nutrition assistant. Based on these symptoms: ${symptoms.join(', ')}
@@ -172,6 +199,7 @@ List 2-3 possible nutrient deficiencies and a short food-first recommendation fo
       final response = await model.generateContent([Content.text(prompt)]);
       _symptomAnalysis = response.text ?? 'No analysis available right now.';
     } catch (e) {
+      print('Failed to analyze symptoms: $e');
       _aiError = 'Symptom analysis failed: $e';
     } finally {
       _aiBusy = false;

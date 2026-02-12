@@ -131,24 +131,6 @@ class _SymptomsCheckerPageState extends State<SymptomsCheckerPage> {
                   ),
                 ),
               ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Booking appointment with nutritionist...'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.calendar_today),
-              label: const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text(
-                  'Consult a Nutritionist',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
           ],
         ),
       ),

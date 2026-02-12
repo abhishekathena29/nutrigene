@@ -168,6 +168,7 @@ class ChildrenProvider extends ChangeNotifier {
           .get();
       _children = snapshot.docs.map(ChildProfile.fromDoc).toList();
     } catch (e) {
+      print('Unable to load children: $e');
       _error = 'Unable to load children: $e';
     } finally {
       _isLoading = false;
@@ -193,6 +194,7 @@ class ChildrenProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
+      print('Unable to save child: $e');
       _error = 'Unable to save child: $e';
       notifyListeners();
       rethrow;
@@ -208,6 +210,7 @@ class ChildrenProvider extends ChangeNotifier {
       _growthRecords.remove(childId);
       notifyListeners();
     } catch (e) {
+      print('Unable to delete child: $e');
       _error = 'Unable to delete child: $e';
       notifyListeners();
       rethrow;
@@ -227,6 +230,7 @@ class ChildrenProvider extends ChangeNotifier {
           .toList(growable: false);
       notifyListeners();
     } catch (e) {
+      print('Unable to load growth records: $e');
       _error = 'Unable to load growth records: $e';
       notifyListeners();
     }
@@ -249,6 +253,7 @@ class ChildrenProvider extends ChangeNotifier {
       _growthRecords[childId] = records;
       notifyListeners();
     } catch (e) {
+      print('Unable to save growth record: $e');
       _error = 'Unable to save growth record: $e';
       notifyListeners();
       rethrow;

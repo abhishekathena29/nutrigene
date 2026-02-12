@@ -14,12 +14,14 @@ class _MealPlanPageState extends State<MealPlanPage> {
   bool _didLoad = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_didLoad) {
-      context.read<NutritionProvider>().loadMealPlans();
-      _didLoad = true;
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_didLoad && mounted) {
+        context.read<NutritionProvider>().loadMealPlans();
+        _didLoad = true;
+      }
+    });
   }
 
   @override
@@ -28,7 +30,17 @@ class _MealPlanPageState extends State<MealPlanPage> {
     final mealPlan = provider.mealPlans[_selectedDay];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Meal Plans')),
+      appBar: AppBar(
+        title: const Text('Meal Plans'),
+        actions: [
+          IconButton(
+            onPressed: provider.mealPlans[_selectedDay] == null
+                ? null
+                : () => _confirmDeletePlan(context),
+            icon: const Icon(Icons.delete_outline),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -268,13 +280,18 @@ class _MealPlanPageState extends State<MealPlanPage> {
     );
 
     if (shouldGenerate == true) {
-      await provider.generatePlan(
+      final plan = await provider.generatePlan(
         day: _selectedDay,
         childAge: ageController.text,
         preferences: preferencesController.text.isEmpty
             ? null
             : preferencesController.text,
       );
+      if (plan != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meal plan saved')),
+        );
+      }
     }
   }
 
@@ -403,6 +420,40 @@ class _MealPlanPageState extends State<MealPlanPage> {
       await provider.saveMealPlan(
         MealPlan(day: _selectedDay, meals: updatedMeals, aiNote: current?.aiNote),
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$mealType updated')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmDeletePlan(BuildContext context) async {
+    final provider = context.read<NutritionProvider>();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete meal plan?'),
+        content: Text('Remove meal plan for $_selectedDay?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await provider.deleteMealPlan(_selectedDay);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meal plan deleted')),
+        );
+      }
     }
   }
 }

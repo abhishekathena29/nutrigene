@@ -13,12 +13,14 @@ class _ChildrenPageState extends State<ChildrenPage> {
   bool _didLoad = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_didLoad) {
-      context.read<ChildrenProvider>().loadChildren();
-      _didLoad = true;
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_didLoad && mounted) {
+        context.read<ChildrenProvider>().loadChildren();
+        _didLoad = true;
+      }
+    });
   }
 
   @override

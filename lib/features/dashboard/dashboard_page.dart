@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 
@@ -32,40 +33,9 @@ class DashboardPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _buildStatCard(
-                  context,
-                  icon: Icons.child_care,
-                  title: 'Children',
-                  value: '3',
-                  color: theme.colorScheme.primary,
-                ),
-                _buildStatCard(
-                  context,
-                  icon: Icons.restaurant_menu,
-                  title: 'Meals',
-                  value: '45',
-                  color: theme.colorScheme.secondary,
-                ),
-                _buildStatCard(
-                  context,
-                  icon: Icons.warning_amber_rounded,
-                  title: 'Alerts',
-                  value: '2',
-                  color: Colors.amber.shade700,
-                ),
-                _buildStatCard(
-                  context,
-                  icon: Icons.psychology,
-                  title: 'Activities',
-                  value: '12',
-                  color: Colors.indigo.shade400,
-                ),
-              ],
-            ),
+            _buildSnapshotTiles(context),
+            const SizedBox(height: 12),
+            _buildTodayMealsCard(context),
             const SizedBox(height: 28),
             const _SectionTitle(title: 'Key Alerts'),
             const SizedBox(height: 12),
@@ -197,16 +167,16 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _HeroBadge(
-                icon: Icons.star_rate_rounded,
-                label: 'Wellness score',
-                value: '86',
+              _buildHeroBadgeStream(
+                icon: Icons.health_and_safety,
+                label: 'Wellness logged',
+                collection: 'wellnessLogs',
               ),
               const SizedBox(width: 10),
-              _HeroBadge(
+              _buildHeroBadgeStream(
                 icon: Icons.local_dining,
-                label: 'Meals logged',
-                value: '12',
+                label: 'Meals planned',
+                collection: 'mealPlans',
               ),
             ],
           ),
@@ -215,59 +185,237 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(
+  Widget _buildSnapshotTiles(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: tileWidth,
+              child: _buildSnapshotTileStream(
+                context,
+                icon: Icons.child_care,
+                label: 'Children',
+                collection: 'children',
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _buildSnapshotTileStream(
+                context,
+                icon: Icons.restaurant_menu,
+                label: 'Meals',
+                collection: 'mealPlans',
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _buildSnapshotTileStream(
+                context,
+                icon: Icons.psychology,
+                label: 'Activities',
+                collection: 'activities',
+                color: Colors.indigo.shade400,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSnapshotTileStream(
     BuildContext context, {
     required IconData icon,
-    required String title,
+    required String label,
+    required String collection,
+    required Color color,
+  }) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection(collection).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('Failed to load $collection: ${snapshot.error}');
+        }
+        final value = snapshot.hasData ? snapshot.data!.size.toString() : '--';
+        return _buildSnapshotTile(
+          context,
+          icon: icon,
+          label: label,
+          value: value,
+          color: color,
+        );
+      },
+    );
+  }
+
+  Widget _buildSnapshotTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
     required String value,
     required Color color,
   }) {
     final theme = Theme.of(context);
     return Container(
-      width: (MediaQuery.of(context).size.width),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-        border: Border.all(color: color.withOpacity(0.12)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.18)),
       ),
-      child: Column(
+      child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 22, color: color),
+            child: Icon(icon, size: 18, color: color),
           ),
-          const SizedBox(height: 14),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTodayMealsCard(BuildContext context) {
+    final day = _todayKey();
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('mealPlans')
+          .doc(day)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('Failed to load today meals: ${snapshot.error}');
+        }
+        final data = snapshot.data?.data() ?? {};
+        final Map<String, dynamic> meals =
+            (data['meals'] as Map<String, dynamic>?) ?? {};
+        final entries = meals.entries
+            .where((entry) => entry.value.toString().trim().isNotEmpty)
+            .toList();
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.today, size: 18, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Today\'s meals',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (entries.isEmpty)
+                Text(
+                  'No meals planned yet',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                )
+              else
+                ...entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.only(top: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${entry.key}: ${entry.value}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeroBadgeStream({
+    required IconData icon,
+    required String label,
+    required String collection,
+  }) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection(collection).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('Failed to load $collection: ${snapshot.error}');
+        }
+        final value = snapshot.hasData ? snapshot.data!.size.toString() : '--';
+        return _HeroBadge(icon: icon, label: label, value: value);
+      },
+    );
+  }
+
+  String _todayKey() {
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    final index = DateTime.now().weekday - 1;
+    return days[index.clamp(0, days.length - 1)];
   }
 
   Widget _buildAlertCard(
