@@ -186,6 +186,7 @@ class NutritionProvider extends ChangeNotifier {
     }
     _aiBusy = true;
     _aiError = null;
+    _symptomAnalysis = null;
     notifyListeners();
     try {
       final model = GenerativeModel(
@@ -209,7 +210,12 @@ List 2-3 possible nutrient deficiencies and a short food-first recommendation fo
 
   Map<String, String>? _safeParseMeals(String raw) {
     try {
-      final cleaned = raw.trim().replaceAll('```json', '').replaceAll('```', '');
+      var cleaned = raw.trim().replaceAll('```json', '').replaceAll('```', '');
+      final start = cleaned.indexOf('{');
+      final end = cleaned.lastIndexOf('}');
+      if (start != -1 && end != -1 && end > start) {
+        cleaned = cleaned.substring(start, end + 1);
+      }
       final Map<String, dynamic> decoded = jsonDecode(cleaned);
       return decoded.map((key, value) => MapEntry(key, value.toString()));
     } catch (_) {

@@ -23,68 +23,96 @@ class _ChildrenPageState extends State<ChildrenPage> {
     });
   }
 
+  Future<void> _openChildForm({ChildProfile? child}) async {
+    final result = await Navigator.pushNamed(
+      context,
+      '/child/form',
+      arguments: child,
+    );
+    if (!mounted) return;
+    if (result == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            child == null ? 'Child profile saved' : 'Profile updated',
+          ),
+        ),
+      );
+      await context.read<ChildrenProvider>().loadChildren();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final childrenProvider = context.watch<ChildrenProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Children Profiles')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16.0),
-            child: Text(
-              'Manage children profiles and track their growth',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ),
-          if (childrenProvider.isLoading)
-            const Center(child: CircularProgressIndicator()),
-          if (childrenProvider.error != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+      body: RefreshIndicator(
+        onRefresh: () => context.read<ChildrenProvider>().loadChildren(),
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16.0),
               child: Text(
-                childrenProvider.error!,
-                style: const TextStyle(color: Colors.red),
+                'Manage children profiles and track their growth',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ),
-          ...childrenProvider.children.map(
-            (child) => Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: _buildChildCard(context, child),
-            ),
-          ),
-          if (!childrenProvider.isLoading &&
-              childrenProvider.children.isEmpty &&
-              childrenProvider.error == null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    const Text(
-                      'No children added yet',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/child/form'),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create your first profile'),
-                    ),
-                  ],
+            if (childrenProvider.error != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  childrenProvider.error!,
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
+            if (childrenProvider.isLoading &&
+                childrenProvider.children.isEmpty)
+              const Center(child: CircularProgressIndicator()),
+            if (childrenProvider.isLoading &&
+                childrenProvider.children.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12.0),
+                child: LinearProgressIndicator(),
+              ),
+            ...childrenProvider.children.map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: _buildChildCard(context, child),
+              ),
             ),
-        ],
+            if (!childrenProvider.isLoading &&
+                childrenProvider.children.isEmpty &&
+                childrenProvider.error == null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'No children added yet',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () => _openChildForm(),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create your first profile'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/child/form');
-        },
+        onPressed: () => _openChildForm(),
         child: const Icon(Icons.add),
       ),
     );
@@ -150,13 +178,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.edit, size: 20),
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/child/form',
-                    arguments: child,
-                  );
-                },
+                onPressed: () => _openChildForm(child: child),
               ),
               IconButton(
                 icon: const Icon(Icons.delete, size: 20, color: Colors.red),

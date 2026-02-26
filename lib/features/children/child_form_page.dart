@@ -78,7 +78,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Full Name',
+                  labelText: 'Full Name *',
                   hintText: 'Enter child\'s name',
                   prefixIcon: Icon(Icons.person),
                 ),
@@ -93,7 +93,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
               TextFormField(
                 controller: _dobController,
                 decoration: const InputDecoration(
-                  labelText: 'Date of Birth',
+                  labelText: 'Date of Birth *',
                   hintText: 'DD/MM/YYYY',
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
@@ -119,7 +119,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
               DropdownButtonFormField<String>(
                 value: _selectedGender,
                 decoration: const InputDecoration(
-                  labelText: 'Gender',
+                  labelText: 'Gender *',
                   prefixIcon: Icon(Icons.wc),
                 ),
                 items: ['Male', 'Female', 'Other']
@@ -138,20 +138,32 @@ class _ChildFormPageState extends State<ChildFormPage> {
               TextFormField(
                 controller: _guardianController,
                 decoration: const InputDecoration(
-                  labelText: 'Parent/Guardian Name',
+                  labelText: 'Parent/Guardian Name *',
                   hintText: 'Enter parent name',
                   prefixIcon: Icon(Icons.family_restroom),
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a parent/guardian name';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contactController,
                 decoration: const InputDecoration(
-                  labelText: 'Contact Number',
+                  labelText: 'Contact Number *',
                   hintText: 'Enter phone number',
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a contact number';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -180,16 +192,7 @@ class _ChildFormPageState extends State<ChildFormPage> {
                           child,
                         );
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isEditing
-                                ? 'Profile updated'
-                                : 'Child profile saved',
-                          ),
-                        ),
-                      );
-                      Navigator.pop(context);
+                      Navigator.pop(context, true);
                     }
                   }
                 },

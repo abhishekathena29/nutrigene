@@ -72,6 +72,18 @@ class _SignupPageState extends State<SignupPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    final auth = context.read<AuthenProvider>();
+    auth.clearError();
+    final credential = await auth.signInWithGoogle();
+    if (!mounted) return;
+    if (credential != null) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    } else if (auth.error != null) {
+      _showMessage(auth.error!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -183,6 +195,29 @@ class _SignupPageState extends State<SignupPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text('Create account'),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('Or, register with'),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: auth.isLoading ? null : _handleGoogleSignIn,
+                    icon: const Icon(Icons.g_mobiledata),
+                    label: const Text('Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(

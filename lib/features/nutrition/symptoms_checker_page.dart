@@ -65,6 +65,25 @@ class _SymptomsCheckerPageState extends State<SymptomsCheckerPage> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            Card(
+              color: Colors.orange.shade50,
+              child: const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber, color: Colors.orange),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This checker provides general guidance only and is not a medical diagnosis. Always consult a qualified healthcare professional for concerns.',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             const Text(
               'Select Symptoms',

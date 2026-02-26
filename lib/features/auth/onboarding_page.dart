@@ -50,6 +50,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
+  void _handleBack() {
+    if (_currentIndex > 0) {
+      _controller.previousPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -82,6 +91,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pushNamed('/login'),
+                    child: const Text('Skip to login'),
                   ),
                 ],
               ),
@@ -119,16 +133,48 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _handleContinue,
-                child: Text(
-                  _currentIndex == _slides.length - 1
-                      ? 'Continue'
-                      : 'Next',
+              const SizedBox(height: 10),
+              Text(
+                'Swipe or tap Next to continue',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
                 ),
               ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _currentIndex == 0 ? null : _handleBack,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Back'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _handleContinue,
+                      child: Text(
+                        _currentIndex == _slides.length - 1
+                            ? 'Continue'
+                            : 'Next',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.of(context).pushNamed('/login'),
+                child: const Text('Already have an account? Log in'),
+              ),
+              const SizedBox(height: 4),
               OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed('/signup'),
                 style: OutlinedButton.styleFrom(

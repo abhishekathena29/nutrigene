@@ -68,6 +68,18 @@ class _LoginPageState extends State<LoginPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    final auth = context.read<AuthenProvider>();
+    auth.clearError();
+    final credential = await auth.signInWithGoogle();
+    if (!mounted) return;
+    if (credential != null) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+    } else if (auth.error != null) {
+      _showMessage(auth.error!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -156,21 +168,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: null,
+                    onPressed: auth.isLoading ? null : _handleGoogleSignIn,
                     icon: const Icon(Icons.g_mobiledata),
                     label: const Text('Google'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: null,
-                    icon: const Icon(Icons.facebook),
-                    label: const Text('Facebook'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

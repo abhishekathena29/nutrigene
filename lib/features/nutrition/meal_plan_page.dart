@@ -181,6 +181,14 @@ class _MealPlanPageState extends State<MealPlanPage> {
                               icon: const Icon(Icons.auto_awesome),
                               label: const Text('Generate with AI'),
                             ),
+                            const SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: provider.aiBusy
+                                  ? null
+                                  : () => _promptForManualPlan(context),
+                              icon: const Icon(Icons.edit),
+                              label: const Text('Create manually'),
+                            ),
                           ],
                         ),
                       ),
@@ -288,6 +296,92 @@ class _MealPlanPageState extends State<MealPlanPage> {
             : preferencesController.text,
       );
       if (plan != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meal plan saved')),
+        );
+      }
+    }
+  }
+
+  Future<void> _promptForManualPlan(BuildContext context) async {
+    final breakfastController = TextEditingController();
+    final midMorningController = TextEditingController();
+    final lunchController = TextEditingController();
+    final afternoonController = TextEditingController();
+    final dinnerController = TextEditingController();
+    final noteController = TextEditingController();
+    final provider = context.read<NutritionProvider>();
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Create plan for $_selectedDay'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: breakfastController,
+                decoration: const InputDecoration(labelText: 'Breakfast'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: midMorningController,
+                decoration: const InputDecoration(labelText: 'Mid-Morning'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: lunchController,
+                decoration: const InputDecoration(labelText: 'Lunch'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: afternoonController,
+                decoration: const InputDecoration(labelText: 'Afternoon'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: dinnerController,
+                decoration: const InputDecoration(labelText: 'Dinner'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(
+                  labelText: 'Optional note',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSave == true) {
+      final plan = MealPlan(
+        day: _selectedDay,
+        meals: {
+          'Breakfast': breakfastController.text.trim(),
+          'Mid-Morning': midMorningController.text.trim(),
+          'Lunch': lunchController.text.trim(),
+          'Afternoon': afternoonController.text.trim(),
+          'Dinner': dinnerController.text.trim(),
+        },
+        aiNote: noteController.text.trim().isEmpty
+            ? null
+            : noteController.text.trim(),
+      );
+      await provider.saveMealPlan(plan);
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Meal plan saved')),
         );
