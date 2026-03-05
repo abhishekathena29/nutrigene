@@ -219,43 +219,6 @@ class AboutPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Legal
-            const Text(
-              'Legal',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    title: const Text('Terms of Service'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: const Text('Privacy Policy'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {},
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    title: const Text('Open Source Licenses'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      showLicensePage(
-                        context: context,
-                        applicationName: 'NutriGene',
-                        applicationVersion: '1.0.0',
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 32),
 
             // Copyright
@@ -319,4 +282,3 @@ class AboutPage extends StatelessWidget {
     );
   }
 }
-

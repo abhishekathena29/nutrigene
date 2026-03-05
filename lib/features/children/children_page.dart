@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/features/children/child_form_page.dart';
 import 'package:nutritrack/features/children/provider/children_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -10,146 +11,210 @@ class ChildrenPage extends StatefulWidget {
 }
 
 class _ChildrenPageState extends State<ChildrenPage> {
-  bool _didLoad = false;
-
   @override
   void initState() {
     super.initState();
+    // Fetch children once when the page is first shown.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_didLoad && mounted) {
-        context.read<ChildrenProvider>().loadChildren();
-        _didLoad = true;
-      }
+      context.read<ChildrenProvider>().loadChildren();
     });
   }
 
-  Future<void> _openChildForm({ChildProfile? child}) async {
-    final result = await Navigator.pushNamed(
+  /// Opens the form. Pass [child] to edit, leave null to add new.
+  Future<void> _openForm({ChildProfile? child}) async {
+    final result = await Navigator.push<bool>(
       context,
-      '/child/form',
-      arguments: child,
+      MaterialPageRoute(builder: (_) => ChildFormPage(child: child)),
     );
     if (!mounted) return;
     if (result == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            child == null ? 'Child profile saved' : 'Profile updated',
+            child == null ? 'Child has been added' : 'Child has been updated',
           ),
         ),
       );
-      await context.read<ChildrenProvider>().loadChildren();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final childrenProvider = context.watch<ChildrenProvider>();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Children Profiles')),
-      body: RefreshIndicator(
-        onRefresh: () => context.read<ChildrenProvider>().loadChildren(),
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                'Manage children profiles and track their growth',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ),
-            if (childrenProvider.error != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  childrenProvider.error!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-            if (childrenProvider.isLoading &&
-                childrenProvider.children.isEmpty)
-              const Center(child: CircularProgressIndicator()),
-            if (childrenProvider.isLoading &&
-                childrenProvider.children.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12.0),
-                child: LinearProgressIndicator(),
-              ),
-            ...childrenProvider.children.map(
-              (child) => Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: _buildChildCard(context, child),
-              ),
-            ),
-            if (!childrenProvider.isLoading &&
-                childrenProvider.children.isEmpty &&
-                childrenProvider.error == null)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'No children added yet',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () => _openChildForm(),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Create your first profile'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+      body: Consumer<ChildrenProvider>(
+        builder: (context, provider, _) {
+          return RefreshIndicator(
+            onRefresh: provider.loadChildren,
+            child: _buildBody(provider),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openChildForm(),
+        onPressed: _openForm,
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildChildCard(
-    BuildContext context,
-    ChildProfile child,
-  ) {
-    final Color color =
-        child.gender.toLowerCase().startsWith('f') ? Colors.pink : Colors.blue;
+  Widget _buildBody(ChildrenProvider provider) {
+    // Show full-screen spinner only on the very first load.
+    if (provider.isLoading && provider.children.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.error != null && provider.children.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              provider.error!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: provider.loadChildren,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final children = provider.children;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Manage children profiles and track their growth',
+            style: TextStyle(fontSize: 15, color: Colors.grey),
+          ),
+        ),
+
+        // Thin progress bar when refreshing while list is visible.
+        if (provider.isLoading && children.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: LinearProgressIndicator(),
+          ),
+
+        // Empty state
+        if (children.isEmpty)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Icon(Icons.child_care, size: 48, color: Colors.grey),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'No children added yet',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: _openForm,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add your first child'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Child cards
+        for (final child in children)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _ChildCard(
+              child: child,
+              onEdit: () => _openForm(child: child),
+              onDelete: () => _confirmDelete(child),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _confirmDelete(ChildProfile child) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete profile?'),
+        content: Text('Remove ${child.name} permanently?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && mounted) {
+      try {
+        await context.read<ChildrenProvider>().deleteChild(child.id);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${child.name} deleted')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to delete. Try again.')),
+          );
+        }
+      }
+    }
+  }
+}
+
+// ── Child card extracted into its own widget for clean separation ──────────
+
+class _ChildCard extends StatelessWidget {
+  const _ChildCard({
+    required this.child,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final ChildProfile child;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFemale = child.gender.toLowerCase().startsWith('f');
+    final color = isFemale ? Colors.pink : Colors.blue;
+
     return Card(
       child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/child/details',
-            arguments: child.id,
-          );
-        },
+        onTap: () =>
+            Navigator.pushNamed(context, '/child/details', arguments: child.id),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 30,
-                backgroundColor: color.withOpacity(0.2),
+                radius: 28,
+                backgroundColor: color.withValues(alpha: 0.15),
                 child: Icon(
-                  child.gender.toLowerCase().startsWith('f')
-                      ? Icons.girl
-                      : Icons.boy,
-                  size: 32,
+                  isFemale ? Icons.girl : Icons.boy,
+                  size: 30,
                   color: color,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,58 +222,39 @@ class _ChildrenPageState extends State<ChildrenPage> {
                     Text(
                       child.name,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       'DOB: ${child.dob.toLocal().toString().split(' ').first}',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      child.guardianName.isNotEmpty
-                          ? 'Guardian: ${child.guardianName}'
-                          : 'Tap to view details',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
+                    if (child.guardianName.isNotEmpty)
+                      Text(
+                        'Guardian: ${child.guardianName}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
                   ],
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.edit, size: 20),
-                onPressed: () => _openChildForm(child: child),
+                onPressed: onEdit,
+                tooltip: 'Edit',
               ),
               IconButton(
-                icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Delete profile?'),
-                      content: Text('Remove ${child.name} permanently?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    await context.read<ChildrenProvider>().deleteChild(child.id);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${child.name} deleted')),
-                      );
-                    }
-                  }
-                },
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 20,
+                  color: Colors.red,
+                ),
+                onPressed: onDelete,
+                tooltip: 'Delete',
               ),
             ],
           ),

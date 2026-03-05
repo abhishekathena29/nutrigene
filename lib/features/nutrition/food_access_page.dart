@@ -40,7 +40,7 @@ class FoodAccessPage extends StatelessWidget {
               icon: Icons.grass,
               title: 'Vegetables',
               items: 'Spinach, Carrots, Tomatoes',
-              priceRange: '\$2-5/kg',
+              priceRange: '₹20–60/kg',
               color: Colors.green,
             ),
             const SizedBox(height: 8),
@@ -48,7 +48,7 @@ class FoodAccessPage extends StatelessWidget {
               icon: Icons.apple,
               title: 'Fruits',
               items: 'Bananas, Apples, Oranges',
-              priceRange: '\$3-7/kg',
+              priceRange: '₹40–120/kg',
               color: Colors.orange,
             ),
             const SizedBox(height: 8),
@@ -56,7 +56,7 @@ class FoodAccessPage extends StatelessWidget {
               icon: Icons.set_meal,
               title: 'Proteins',
               items: 'Eggs, Lentils, Chicken',
-              priceRange: '\$4-12/kg',
+              priceRange: '₹80–250/kg',
               color: Colors.red,
             ),
             const SizedBox(height: 8),
@@ -64,7 +64,7 @@ class FoodAccessPage extends StatelessWidget {
               icon: Icons.rice_bowl,
               title: 'Grains',
               items: 'Rice, Wheat, Oats',
-              priceRange: '\$1-3/kg',
+              priceRange: '₹30–80/kg',
               color: Colors.brown,
             ),
             const SizedBox(height: 8),
@@ -72,7 +72,7 @@ class FoodAccessPage extends StatelessWidget {
               icon: Icons.water_drop,
               title: 'Dairy',
               items: 'Milk, Yogurt, Cheese',
-              priceRange: '\$2-8/L',
+              priceRange: '₹50–200/L',
               color: Colors.blue,
             ),
             const SizedBox(height: 24),
@@ -84,34 +84,17 @@ class FoodAccessPage extends StatelessWidget {
             _buildMealBundleCard(
               title: 'Daily Essentials Bundle',
               description: 'Rice, Lentils, Vegetables, Cooking Oil',
-              price: '\$15',
-              servings: '4-5 meals',
+              price: '₹350',
+              servings: '4–5 meals',
             ),
             const SizedBox(height: 8),
             _buildMealBundleCard(
               title: 'Protein Pack',
               description: 'Eggs, Chicken, Beans, Milk',
-              price: '\$20',
-              servings: '6-7 meals',
+              price: '₹500',
+              servings: '6–7 meals',
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Finding nearest food stores...'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.location_on),
-              label: const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text(
-                  'Find Nearby Stores',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -224,4 +207,3 @@ class FoodAccessPage extends StatelessWidget {
     );
   }
 }
-

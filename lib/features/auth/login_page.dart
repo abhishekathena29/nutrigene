@@ -37,6 +37,7 @@ class _LoginPageState extends State<LoginPage> {
     final credential = await auth.signIn(email: email, password: password);
     if (!mounted) return;
     if (credential != null) {
+      print("Login Success");
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
     } else if (auth.error != null) {
       _showMessage(auth.error!);

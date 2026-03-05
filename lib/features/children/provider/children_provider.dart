@@ -1,9 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+
+// ─────────────────────────────────────────────
+// Model
+// ─────────────────────────────────────────────
 
 class ChildProfile {
   ChildProfile({
     required this.id,
+    required this.userId,
     required this.name,
     required this.dob,
     required this.gender,
@@ -13,6 +19,7 @@ class ChildProfile {
   });
 
   final String id;
+  final String userId;
   final String name;
   final DateTime dob;
   final String gender;
@@ -22,6 +29,7 @@ class ChildProfile {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': userId,
       'name': name,
       'dob': Timestamp.fromDate(dob),
       'gender': gender,
@@ -33,6 +41,7 @@ class ChildProfile {
 
   ChildProfile copyWith({
     String? id,
+    String? userId,
     String? name,
     DateTime? dob,
     String? gender,
@@ -42,6 +51,7 @@ class ChildProfile {
   }) {
     return ChildProfile(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       name: name ?? this.name,
       dob: dob ?? this.dob,
       gender: gender ?? this.gender,
@@ -56,6 +66,7 @@ class ChildProfile {
     final Timestamp? dobTimestamp = data['dob'] as Timestamp?;
     return ChildProfile(
       id: doc.id,
+      userId: data['userId'] as String? ?? '',
       name: data['name'] as String? ?? 'Unknown',
       dob: dobTimestamp?.toDate() ?? DateTime.now(),
       gender: data['gender'] as String? ?? 'Unknown',
@@ -65,6 +76,10 @@ class ChildProfile {
     );
   }
 }
+
+// ─────────────────────────────────────────────
+// Growth Record Model
+// ─────────────────────────────────────────────
 
 class GrowthRecord {
   GrowthRecord({
@@ -131,11 +146,18 @@ class GrowthRecord {
   }
 }
 
+// ─────────────────────────────────────────────
+// Provider
+// ─────────────────────────────────────────────
+
 class ChildrenProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   List<ChildProfile> _children = [];
   final Map<String, List<GrowthRecord>> _growthRecords = {};
+
+  // isLoading is ONLY used for the initial fetch on the list page.
   bool _isLoading = false;
   String? _error;
 
@@ -144,10 +166,13 @@ class ChildrenProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  /// Returns the current signed-in user's UID, or null if not signed in.
+  String? get _uid => _auth.currentUser?.uid;
+
   ChildProfile? getChildById(String? id) {
     if (id == null) return null;
     try {
-      return _children.firstWhere((child) => child.id == id);
+      return _children.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
     }
@@ -157,18 +182,28 @@ class ChildrenProvider extends ChangeNotifier {
     return _growthRecords[childId] ?? [];
   }
 
+  // ── Fetch ──────────────────────────────────
+
   Future<void> loadChildren() async {
+    final uid = _uid;
+    if (uid == null) {
+      _children = [];
+      _error = 'Not signed in.';
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     _error = null;
     notifyListeners();
+
     try {
       final snapshot = await _firestore
           .collection('children')
-          .orderBy('name')
+          .where('userId', isEqualTo: uid)
           .get();
       _children = snapshot.docs.map(ChildProfile.fromDoc).toList();
     } catch (e) {
-      print('Unable to load children: $e');
       _error = 'Unable to load children: $e';
     } finally {
       _isLoading = false;
@@ -176,46 +211,42 @@ class ChildrenProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addOrUpdateChild(ChildProfile child) async {
-    _error = null;
+  // ── Add ────────────────────────────────────
+
+  /// Adds a new child to Firestore tagged with the current user's UID.
+  Future<void> addChild(ChildProfile child) async {
+    final uid = _uid;
+    if (uid == null) throw Exception('Not signed in.');
+
+    // Always stamp the correct userId regardless of what was passed in.
+    final tagged = child.copyWith(userId: uid);
+    final doc = await _firestore.collection('children').add(tagged.toMap());
+    _children = [..._children, tagged.copyWith(id: doc.id)];
     notifyListeners();
-    try {
-      if (child.id.isEmpty) {
-        final doc = await _firestore.collection('children').add(child.toMap());
-        _children = [..._children, child.copyWith(id: doc.id)];
-      } else {
-        await _firestore
-            .collection('children')
-            .doc(child.id)
-            .set(child.toMap(), SetOptions(merge: true));
-        _children = _children
-            .map((c) => c.id == child.id ? child : c)
-            .toList(growable: false);
-      }
-      notifyListeners();
-    } catch (e) {
-      print('Unable to save child: $e');
-      _error = 'Unable to save child: $e';
-      notifyListeners();
-      rethrow;
-    }
   }
 
-  Future<void> deleteChild(String childId) async {
-    _error = null;
+  // ── Update ─────────────────────────────────
+
+  /// Updates an existing child in Firestore.
+  Future<void> updateChild(ChildProfile child) async {
+    await _firestore
+        .collection('children')
+        .doc(child.id)
+        .set(child.toMap(), SetOptions(merge: true));
+    _children = _children.map((c) => c.id == child.id ? child : c).toList();
     notifyListeners();
-    try {
-      await _firestore.collection('children').doc(childId).delete();
-      _children = _children.where((c) => c.id != childId).toList();
-      _growthRecords.remove(childId);
-      notifyListeners();
-    } catch (e) {
-      print('Unable to delete child: $e');
-      _error = 'Unable to delete child: $e';
-      notifyListeners();
-      rethrow;
-    }
   }
+
+  // ── Delete ─────────────────────────────────
+
+  Future<void> deleteChild(String childId) async {
+    await _firestore.collection('children').doc(childId).delete();
+    _children = _children.where((c) => c.id != childId).toList();
+    _growthRecords.remove(childId);
+    notifyListeners();
+  }
+
+  // ── Growth Records ─────────────────────────
 
   Future<void> loadGrowthRecords(String childId) async {
     try {
@@ -227,36 +258,22 @@ class ChildrenProvider extends ChangeNotifier {
           .get();
       _growthRecords[childId] = snapshot.docs
           .map(GrowthRecord.fromDoc)
-          .toList(growable: false);
+          .toList();
       notifyListeners();
     } catch (e) {
-      print('Unable to load growth records: $e');
       _error = 'Unable to load growth records: $e';
       notifyListeners();
     }
   }
 
   Future<void> addGrowthRecord(String childId, GrowthRecord record) async {
-    _error = null;
+    final doc = await _firestore
+        .collection('children')
+        .doc(childId)
+        .collection('growthRecords')
+        .add(record.toMap());
+    final updated = record.copyWith(id: doc.id);
+    _growthRecords[childId] = [...(_growthRecords[childId] ?? []), updated];
     notifyListeners();
-    try {
-      final doc = await _firestore
-          .collection('children')
-          .doc(childId)
-          .collection('growthRecords')
-          .add(record.toMap());
-      final updatedRecord = record.copyWith(id: doc.id);
-      final List<GrowthRecord> records = [
-        ...(_growthRecords[childId] ?? []),
-        updatedRecord,
-      ];
-      _growthRecords[childId] = records;
-      notifyListeners();
-    } catch (e) {
-      print('Unable to save growth record: $e');
-      _error = 'Unable to save growth record: $e';
-      notifyListeners();
-      rethrow;
-    }
   }
 }

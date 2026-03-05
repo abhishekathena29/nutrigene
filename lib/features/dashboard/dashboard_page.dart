@@ -7,8 +7,6 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       // extendBodyBehindAppBar: true,
@@ -65,23 +63,10 @@ class DashboardPage extends StatelessWidget {
               children: [
                 _buildActionPill(
                   context,
-                  icon: Icons.add_circle,
-                  label: 'Add child',
-                  onTap: () => Navigator.pushNamed(context, '/child/form'),
-                ),
-                _buildActionPill(
-                  context,
                   icon: Icons.restaurant_menu,
                   label: 'Meal plans',
                   onTap: () =>
                       Navigator.pushNamed(context, '/nutrition/meal-plan'),
-                ),
-                _buildActionPill(
-                  context,
-                  icon: Icons.analytics_outlined,
-                  label: 'Growth chart',
-                  onTap: () =>
-                      Navigator.pushNamed(context, '/child/growth-chart'),
                 ),
                 _buildActionPill(
                   context,
@@ -340,8 +325,8 @@ class DashboardPage extends StatelessWidget {
                   Text(
                     'Today\'s meals',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -350,8 +335,8 @@ class DashboardPage extends StatelessWidget {
                 Text(
                   'No meals planned yet',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                    color: AppTheme.textSecondary,
+                  ),
                 )
               else
                 ...entries.map(

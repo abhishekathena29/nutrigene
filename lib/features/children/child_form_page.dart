@@ -3,7 +3,10 @@ import 'package:nutritrack/features/children/provider/children_provider.dart';
 import 'package:provider/provider.dart';
 
 class ChildFormPage extends StatefulWidget {
-  const ChildFormPage({super.key});
+  /// Pass [child] to pre-fill the form for editing. Leave null to add new.
+  const ChildFormPage({super.key, this.child});
+
+  final ChildProfile? child;
 
   @override
   State<ChildFormPage> createState() => _ChildFormPageState();
@@ -16,34 +19,26 @@ class _ChildFormPageState extends State<ChildFormPage> {
   late final TextEditingController _guardianController;
   late final TextEditingController _contactController;
   late final TextEditingController _notesController;
+
   DateTime? _dob;
   String _selectedGender = 'Male';
-  ChildProfile? _editingChild;
+  bool _isSaving = false;
+
+  bool get _isEditing => widget.child != null;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _dobController = TextEditingController();
-    _guardianController = TextEditingController();
-    _contactController = TextEditingController();
-    _notesController = TextEditingController();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is ChildProfile && _editingChild == null) {
-      _editingChild = args;
-      _nameController.text = args.name;
-      _dob = args.dob;
-      _dobController.text = args.dob.toLocal().toString().split(' ').first;
-      _selectedGender = args.gender;
-      _guardianController.text = args.guardianName;
-      _contactController.text = args.contactNumber;
-      _notesController.text = args.notes;
-    }
+    final c = widget.child;
+    _nameController = TextEditingController(text: c?.name ?? '');
+    _dobController = TextEditingController(
+      text: c != null ? c.dob.toLocal().toString().split(' ').first : '',
+    );
+    _guardianController = TextEditingController(text: c?.guardianName ?? '');
+    _contactController = TextEditingController(text: c?.contactNumber ?? '');
+    _notesController = TextEditingController(text: c?.notes ?? '');
+    _dob = c?.dob;
+    _selectedGender = c?.gender ?? 'Male';
   }
 
   @override
@@ -56,12 +51,45 @@ class _ChildFormPageState extends State<ChildFormPage> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+
+    final provider = context.read<ChildrenProvider>();
+    final profile = ChildProfile(
+      id: widget.child?.id ?? '',
+      userId: widget.child?.userId ?? '',
+      name: _nameController.text.trim(),
+      dob: _dob!,
+      gender: _selectedGender,
+      guardianName: _guardianController.text.trim(),
+      contactNumber: _contactController.text.trim(),
+      notes: _notesController.text.trim(),
+    );
+
+    try {
+      if (_isEditing) {
+        await provider.updateChild(profile);
+      } else {
+        await provider.addChild(profile);
+      }
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save. Please try again.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isEditing = _editingChild != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Child Profile' : 'Add Child Profile'),
+        title: Text(_isEditing ? 'Edit Child Profile' : 'Add Child Profile'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -75,26 +103,27 @@ class _ChildFormPageState extends State<ChildFormPage> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+
+              // Name
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Full Name *',
-                  hintText: 'Enter child\'s name',
+                  hintText: "Enter child's name",
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a name';
-                  }
-                  return null;
-                },
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Please enter a name'
+                    : null,
               ),
               const SizedBox(height: 16),
+
+              // Date of birth
               TextFormField(
                 controller: _dobController,
                 decoration: const InputDecoration(
                   labelText: 'Date of Birth *',
-                  hintText: 'DD/MM/YYYY',
+                  hintText: 'Tap to select',
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
@@ -102,54 +131,53 @@ class _ChildFormPageState extends State<ChildFormPage> {
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
-                    initialDate: _dob ?? DateTime.now(),
-                    firstDate: DateTime(2010),
+                    initialDate: _dob ?? DateTime(2020),
+                    firstDate: DateTime(2000),
                     lastDate: DateTime.now(),
                   );
                   if (picked != null) {
                     setState(() {
                       _dob = picked;
-                      _dobController.text =
-                          picked.toLocal().toString().split(' ').first;
+                      _dobController.text = picked
+                          .toLocal()
+                          .toString()
+                          .split(' ')
+                          .first;
                     });
                   }
                 },
               ),
               const SizedBox(height: 16),
+
+              // Gender
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: const InputDecoration(
                   labelText: 'Gender *',
                   prefixIcon: Icon(Icons.wc),
                 ),
                 items: ['Male', 'Female', 'Other']
-                    .map(
-                      (gender) =>
-                          DropdownMenuItem(value: gender, child: Text(gender)),
-                    )
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                     .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedGender = value!;
-                  });
-                },
+                onChanged: (v) => setState(() => _selectedGender = v!),
               ),
               const SizedBox(height: 16),
+
+              // Guardian
               TextFormField(
                 controller: _guardianController,
                 decoration: const InputDecoration(
-                  labelText: 'Parent/Guardian Name *',
+                  labelText: 'Parent / Guardian Name *',
                   hintText: 'Enter parent name',
                   prefixIcon: Icon(Icons.family_restroom),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a parent/guardian name';
-                  }
-                  return null;
-                },
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Please enter guardian name'
+                    : null,
               ),
               const SizedBox(height: 16),
+
+              // Contact
               TextFormField(
                 controller: _contactController,
                 decoration: const InputDecoration(
@@ -158,14 +186,13 @@ class _ChildFormPageState extends State<ChildFormPage> {
                   prefixIcon: Icon(Icons.phone),
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a contact number';
-                  }
-                  return null;
-                },
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Please enter a contact number'
+                    : null,
               ),
               const SizedBox(height: 16),
+
+              // Notes
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(
@@ -176,29 +203,22 @@ class _ChildFormPageState extends State<ChildFormPage> {
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
+
+              // Save button — uses local _isSaving, NOT provider.isLoading
               ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final child = ChildProfile(
-                      id: _editingChild?.id ?? '',
-                      name: _nameController.text.trim(),
-                      dob: _dob ?? DateTime.now(),
-                      gender: _selectedGender,
-                      guardianName: _guardianController.text.trim(),
-                      contactNumber: _contactController.text.trim(),
-                      notes: _notesController.text.trim(),
-                    );
-                    await context.read<ChildrenProvider>().addOrUpdateChild(
-                          child,
-                        );
-                    if (mounted) {
-                      Navigator.pop(context, true);
-                    }
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text('Save Profile', style: TextStyle(fontSize: 16)),
+                onPressed: _isSaving ? null : _save,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          _isEditing ? 'Update Profile' : 'Save Profile',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                 ),
               ),
             ],

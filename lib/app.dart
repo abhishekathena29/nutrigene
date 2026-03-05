@@ -6,7 +6,6 @@ import 'package:nutritrack/features/auth/provider/auth_provider.dart';
 import 'package:nutritrack/features/auth/signup_page.dart';
 import 'package:nutritrack/features/dashboard/dashboard_page.dart';
 import 'package:nutritrack/features/children/children_page.dart';
-import 'package:nutritrack/features/children/child_form_page.dart';
 import 'package:nutritrack/features/children/child_detail_page.dart';
 import 'package:nutritrack/features/children/growth_input_page.dart';
 import 'package:nutritrack/features/children/growth_chart_page.dart';
@@ -48,7 +47,6 @@ class NutriGeneApp extends StatelessWidget {
         '/signup': (context) => const SignupPage(),
 
         // Children routes
-        '/child/form': (context) => const ChildFormPage(),
         '/child/details': (context) => const ChildDetailPage(),
         '/child/growth-input': (context) => const GrowthInputPage(),
         '/child/growth-chart': (context) => const GrowthChartPage(),
