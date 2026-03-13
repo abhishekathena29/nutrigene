@@ -153,18 +153,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Text('Back'),
+                      child: const Icon(Icons.arrow_back),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _handleContinue,
-                      child: Text(
-                        _currentIndex == _slides.length - 1
-                            ? 'Continue'
-                            : 'Next',
-                      ),
+                      child: _currentIndex == _slides.length - 1
+                          ? const Text('Continue')
+                          : const Icon(Icons.arrow_forward),
                     ),
                   ),
                 ],

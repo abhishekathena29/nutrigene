@@ -42,6 +42,11 @@ class FoodAccessPage extends StatelessWidget {
               items: 'Spinach, Carrots, Tomatoes',
               priceRange: '₹20–60/kg',
               color: Colors.green,
+              details: [
+                'Spinach (₹30/kg): High in iron, calcium, and vitamins. Great cheap alternative to kale.',
+                'Amaranth Leaves (₹20/kg): Very affordable, packed with protein and vitamins.',
+                'Carrots (₹40/kg): Excellent for Vitamin A and eye health.'
+              ]
             ),
             const SizedBox(height: 8),
             _buildFoodCategoryCard(
@@ -50,6 +55,11 @@ class FoodAccessPage extends StatelessWidget {
               items: 'Bananas, Apples, Oranges',
               priceRange: '₹40–120/kg',
               color: Colors.orange,
+              details: [
+                'Bananas (₹40/doz): Excellent cheap source of potassium and instant energy.',
+                'Guava (₹50/kg): More Vitamin C than oranges, usually cheaper seasonally.',
+                'Papaya (₹40/kg): Good for digestion and very affordable per serving.'
+              ]
             ),
             const SizedBox(height: 8),
             _buildFoodCategoryCard(
@@ -58,6 +68,11 @@ class FoodAccessPage extends StatelessWidget {
               items: 'Eggs, Lentils, Chicken',
               priceRange: '₹80–250/kg',
               color: Colors.red,
+              details: [
+                'Lentils/Dal (₹80-100/kg): The most cost-effective plant protein.',
+                'Eggs (₹60/doz): High-quality complete protein. Cheaper than most meats.',
+                'Soy Chunks (₹120/kg): Extremely high protein density per rupee.'
+              ]
             ),
             const SizedBox(height: 8),
             _buildFoodCategoryCard(
@@ -66,6 +81,11 @@ class FoodAccessPage extends StatelessWidget {
               items: 'Rice, Wheat, Oats',
               priceRange: '₹30–80/kg',
               color: Colors.brown,
+              details: [
+                'Millets (₹40-60/kg): Ragi and Bajra are highly nutritious, cheap, and rich in calcium/iron.',
+                'Brown Rice (₹60/kg): Better fiber content than white rice.',
+                'Oats (₹150/kg): Good for heart health and keeps you full longer.'
+              ]
             ),
             const SizedBox(height: 8),
             _buildFoodCategoryCard(
@@ -74,6 +94,11 @@ class FoodAccessPage extends StatelessWidget {
               items: 'Milk, Yogurt, Cheese',
               priceRange: '₹50–200/L',
               color: Colors.blue,
+              details: [
+                'Toned Milk (₹50/L): Provides same protein and calcium as full cream but cheaper.',
+                'Homemade Curd/Yogurt: Much cheaper than store-bought, great for gut health.',
+                'Paneer (₹300/kg): Good vegetarian complete protein.'
+              ]
             ),
             const SizedBox(height: 24),
             const Text(
@@ -107,46 +132,66 @@ class FoodAccessPage extends StatelessWidget {
     required String items,
     required String priceRange,
     required Color color,
+    required List<String> details,
   }) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withOpacity(0.2),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              priceRange,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
+      clipBehavior: Clip.antiAlias,
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: color.withOpacity(0.2),
+          child: Icon(icon, color: color),
         ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          items,
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        trailing: Text(
+          priceRange,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        children: [
+          Container(
+            color: color.withOpacity(0.05),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Budget-friendly, High-Nutrition Alternatives:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                ...details.map((detail) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 16, color: color),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          detail,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

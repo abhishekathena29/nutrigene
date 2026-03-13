@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class NgoDashboardPage extends StatelessWidget {
@@ -39,7 +40,7 @@ class NgoDashboardPage extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Hope Foundation',
+                                'NGO Portal',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -48,7 +49,7 @@ class NgoDashboardPage extends StatelessWidget {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Managing 45 children across 3 locations',
+                                'Manage enrolled children effectively',
                                 style: TextStyle(color: Colors.indigo),
                               ),
                             ],
@@ -62,7 +63,7 @@ class NgoDashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Statistics
+            // Statistics (Placeholders until full backend stats implemented)
             const Text(
               'Overview Statistics',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -71,18 +72,23 @@ class NgoDashboardPage extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
-                    'Total Children',
-                    '45',
-                    Icons.child_care,
-                    Colors.blue,
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance.collection('children').snapshots(),
+                    builder: (context, snapshot) {
+                      return _buildStatCard(
+                        'Total Children',
+                        snapshot.hasData ? snapshot.data!.docs.length.toString() : '--',
+                        Icons.child_care,
+                        Colors.blue,
+                      );
+                    }
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
                     'Active Cases',
-                    '12',
+                    '--',
                     Icons.warning,
                     Colors.orange,
                   ),
@@ -95,7 +101,7 @@ class NgoDashboardPage extends StatelessWidget {
                 Expanded(
                   child: _buildStatCard(
                     'Well Nourished',
-                    '38',
+                    '--',
                     Icons.check_circle,
                     Colors.green,
                   ),
@@ -104,7 +110,7 @@ class NgoDashboardPage extends StatelessWidget {
                 Expanded(
                   child: _buildStatCard(
                     'At Risk',
-                    '7',
+                    '--',
                     Icons.error,
                     Colors.red,
                   ),
@@ -114,55 +120,64 @@ class NgoDashboardPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Children List
-            const Text(
-              'Children Profiles',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Children Profiles',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/children'), 
+                  child: const Text('View All')
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            _buildChildListItem(
-              context,
-              name: 'Emma Johnson',
-              age: '5 years',
-              status: 'Well Nourished',
-              statusColor: Colors.green,
-              location: 'Center A',
+            
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('children')
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Center(
+                        child: Text(
+                          'No children enrolled yet.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: snapshot.data!.docs.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: _buildChildListItem(
+                        context,
+                        name: data['name'] ?? 'Unknown',
+                        age: '${_calculateAge(data['dateOfBirth'])}',
+                        status: 'Monitoring', // You can derive this from growth data later
+                        statusColor: Colors.blue, 
+                        location: data['location'] ?? 'Registered Center',
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
-            const SizedBox(height: 8),
-            _buildChildListItem(
-              context,
-              name: 'Liam Smith',
-              age: '3 years',
-              status: 'Needs Attention',
-              statusColor: Colors.orange,
-              location: 'Center A',
-            ),
-            const SizedBox(height: 8),
-            _buildChildListItem(
-              context,
-              name: 'Sophia Williams',
-              age: '7 years',
-              status: 'Well Nourished',
-              statusColor: Colors.green,
-              location: 'Center B',
-            ),
-            const SizedBox(height: 8),
-            _buildChildListItem(
-              context,
-              name: 'Noah Brown',
-              age: '4 years',
-              status: 'At Risk',
-              statusColor: Colors.red,
-              location: 'Center A',
-            ),
-            const SizedBox(height: 8),
-            _buildChildListItem(
-              context,
-              name: 'Olivia Davis',
-              age: '6 years',
-              status: 'Well Nourished',
-              statusColor: Colors.green,
-              location: 'Center C',
-            ),
+            
             const SizedBox(height: 24),
 
             // Action Buttons
@@ -198,6 +213,34 @@ class NgoDashboardPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _calculateAge(dynamic dateOfBirth) {
+    if (dateOfBirth == null) return 'Unknown age';
+    DateTime dob;
+    if (dateOfBirth is Timestamp) {
+      dob = dateOfBirth.toDate();
+    } else if (dateOfBirth is String) {
+      try {
+        dob = DateTime.parse(dateOfBirth);
+      } catch (e) {
+        return 'Unknown age';
+      }
+    } else {
+      return 'Unknown age';
+    }
+
+    final today = DateTime.now();
+    int age = today.year - dob.year;
+    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+    
+    if (age == 0) {
+      final months = today.month - dob.month + (today.year - dob.year) * 12;
+      return '$months months';
+    }
+    return '$age years';
   }
 
   Widget _buildStatCard(

@@ -126,55 +126,14 @@ class AboutPage extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Column(
-                          children: [
-                            Text(
-                              '10K+',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Children',
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '500+',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text('NGOs', style: TextStyle(color: Colors.green)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '25+',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Countries',
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ],
+                        Icon(Icons.public, color: Colors.green, size: 48),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'NutriGene is rapidly expanding its reach to help NGOs, caregivers, and health workers monitor child growth, combat malnutrition, and provide actionable AI insights worldwide.',
+                            style: TextStyle(color: Colors.green, fontSize: 14),
+                          ),
                         ),
                       ],
                     ),

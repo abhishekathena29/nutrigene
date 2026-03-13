@@ -37,24 +37,65 @@ class DashboardPage extends StatelessWidget {
             const SizedBox(height: 28),
             const _SectionTitle(title: 'Key Alerts'),
             const SizedBox(height: 12),
-            _buildAlertCard(
-              context,
-              icon: Icons.schedule_send,
-              title: 'Nutritional assessment due',
-              subtitle: 'Schedule Emma’s check-in this week',
-              chipLabel: 'Due soon',
-              onTap: () => Navigator.pushNamed(context, '/child/growth-input'),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('alerts')
+                  .orderBy('timestamp', descending: true)
+                  .limit(2)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade400),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'You\'re all caught up! No recent key alerts.',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: snapshot.data!.docs.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    
+                    IconData iconData = Icons.notifications;
+                    String type = data['type'] ?? '';
+                    if (type == 'health') iconData = Icons.health_and_safety;
+                    if (type == 'nutrition') iconData = Icons.restaurant_menu;
+                    if (type == 'growth') iconData = Icons.celebration;
+                    if (type == 'warning') iconData = Icons.warning;
+                    if (type == 'activity') iconData = Icons.psychology;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: _buildAlertCard(
+                        context,
+                        icon: iconData,
+                        title: data['title'] ?? 'Alert',
+                        subtitle: data['description'] ?? '',
+                        chipLabel: data['priority'] ?? 'Low',
+                        onTap: () => Navigator.pushNamed(context, '/alerts'),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            _buildAlertCard(
-              context,
-              icon: Icons.auto_awesome,
-              title: 'New brain activities available',
-              subtitle: '3 fresh activities to boost cognition',
-              chipLabel: 'Recommended',
-              onTap: () => Navigator.pushNamed(context, '/brain/activities'),
-            ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
             const _SectionTitle(title: 'Quick Actions'),
             const SizedBox(height: 12),
             Wrap(
