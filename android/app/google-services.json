@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:936659046488:android:99a76a3fbb137a1b60ba2d",
+        "mobilesdk_app_id": "1:936659046488:android:42c8473601ceef3360ba2d",
         "android_client_info": {
-          "package_name": "com.example.nutritrack"
+          "package_name": "com.nutrigene.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "936659046488-u05rfains0l3uq92k9di65un4jv8sc6f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nutrigene.app",
+            "certificate_hash": "971e8a0a0495793ffe417b506fa6a940d14b89bb"
+          }
+        },
+        {
+          "client_id": "936659046488-sv1cjeh6r3osf0fvls93jeeetf7326of.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDLptWfh-Ef4epP8SQvXsOfJaRWOcWVAA8"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "936659046488-sv1cjeh6r3osf0fvls93jeeetf7326of.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "936659046488-lnul7hd2tfrqpi2cjf9f05pvm2dpmtce.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nutrigene.app"
+              }
+            }
+          ]
         }
       }
     }

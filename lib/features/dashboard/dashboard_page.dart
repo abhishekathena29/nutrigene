@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/app_logo.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -8,116 +9,78 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      // extendBodyBehindAppBar: true,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        // backgroundColor: Colors.transparent,
+        backgroundColor: AppTheme.backgroundColor,
         scrolledUnderElevation: 0,
-        title: const Text('NutriGene'),
-        centerTitle: false,
+        title: Row(
+          children: [
+            const AppLogo(
+              size: 32,
+              padding: 4,
+              backgroundColor: Colors.white,
+              borderRadius: 9,
+              showBorder: true,
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'NutriGene',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+                letterSpacing: -0.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderColor),
+              ),
+              child: const Icon(
+                Icons.notifications_outlined,
+                size: 18,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            onPressed: () => Navigator.pushNamed(context, '/alerts'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeroCard(context),
-            const SizedBox(height: 24),
-            _SectionTitle(
-              title: 'Today’s Snapshot',
+            const SizedBox(height: 28),
+            _buildSectionHeader(
+              'Today\'s Snapshot',
               action: TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/alerts'),
-                child: const Text('View alerts'),
+                child: const Text('View all'),
               ),
             ),
-            const SizedBox(height: 12),
-            _buildSnapshotTiles(context),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
+            _buildSnapshotGrid(context),
+            const SizedBox(height: 16),
             _buildTodayMealsCard(context),
             const SizedBox(height: 28),
-            const _SectionTitle(title: 'Key Alerts'),
-            const SizedBox(height: 12),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('alerts')
-                  .orderBy('timestamp', descending: true)
-                  .limit(2)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade400),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'You\'re all caught up! No recent key alerts.',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: snapshot.data!.docs.map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-                    
-                    IconData iconData = Icons.notifications;
-                    String type = data['type'] ?? '';
-                    if (type == 'health') iconData = Icons.health_and_safety;
-                    if (type == 'nutrition') iconData = Icons.restaurant_menu;
-                    if (type == 'growth') iconData = Icons.celebration;
-                    if (type == 'warning') iconData = Icons.warning;
-                    if (type == 'activity') iconData = Icons.psychology;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: _buildAlertCard(
-                        context,
-                        icon: iconData,
-                        title: data['title'] ?? 'Alert',
-                        subtitle: data['description'] ?? '',
-                        chipLabel: data['priority'] ?? 'Low',
-                        onTap: () => Navigator.pushNamed(context, '/alerts'),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            const _SectionTitle(title: 'Quick Actions'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _buildActionPill(
-                  context,
-                  icon: Icons.restaurant_menu,
-                  label: 'Meal plans',
-                  onTap: () =>
-                      Navigator.pushNamed(context, '/nutrition/meal-plan'),
-                ),
-                _buildActionPill(
-                  context,
-                  icon: Icons.psychology_alt_outlined,
-                  label: 'Brain tips',
-                  onTap: () =>
-                      Navigator.pushNamed(context, '/brain/nutrition-tips'),
-                ),
-              ],
-            ),
+            _buildSectionHeader('Key Alerts'),
+            const SizedBox(height: 14),
+            _buildAlertsSection(context),
+            const SizedBox(height: 28),
+            _buildSectionHeader('Quick Actions'),
+            const SizedBox(height: 14),
+            _buildQuickActions(context),
           ],
         ),
       ),
@@ -125,23 +88,11 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildHeroCard(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0EA778), Color(0xFF0EA5E9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppTheme.heroGradient,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.25),
-            blurRadius: 30,
-            offset: const Offset(0, 14),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,186 +100,135 @@ class DashboardPage extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
-                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.eco_outlined,
-                  color: Colors.white,
-                  size: 20,
+                child: const AppLogo(
+                  size: 40,
+                  padding: 6,
+                  backgroundColor: Colors.transparent,
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Text(
-                  'Welcome back, NutriGuardian',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  'Good morning,\nNutriGuardian',
+                  style: TextStyle(
                     color: Colors.white,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
+                    height: 1.2,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          ElevatedButton.icon(
-            onPressed: () =>
-                Navigator.pushNamed(context, '/nutrition/meal-plan'),
-            icon: const Icon(Icons.local_florist, size: 18),
-            label: const Text('Today\'s focus'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           Text(
-            'AI-curated nutrition and growth insights are ready. Let\'s keep your little ones thriving.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+            'AI-curated insights are ready. Keep your little ones thriving.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 14,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
-              _buildHeroBadgeStream(
-                icon: Icons.health_and_safety,
+              _HeroBadgeStream(
+                icon: Icons.health_and_safety_outlined,
                 label: 'Wellness logged',
                 collection: 'wellnessLogs',
               ),
               const SizedBox(width: 10),
-              _buildHeroBadgeStream(
-                icon: Icons.local_dining,
+              _HeroBadgeStream(
+                icon: Icons.local_dining_outlined,
                 label: 'Meals planned',
                 collection: 'mealPlans',
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/nutrition/meal-plan'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.local_florist_outlined,
+                    size: 16,
+                    color: AppTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'View today\'s focus',
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: AppTheme.primaryColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSnapshotTiles(BuildContext context) {
+  Widget _buildSnapshotGrid(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tileWidth = (constraints.maxWidth - 12) / 2;
+        final w = (constraints.maxWidth - 12) / 2;
         return Wrap(
           spacing: 12,
           runSpacing: 12,
           children: [
             SizedBox(
-              width: tileWidth,
-              child: _buildSnapshotTileStream(
-                context,
-                icon: Icons.child_care,
+              width: w,
+              child: _SnapshotTileStream(
+                icon: Icons.child_care_rounded,
                 label: 'Children',
                 collection: 'children',
-                color: Theme.of(context).colorScheme.primary,
+                color: AppTheme.primaryColor,
               ),
             ),
             SizedBox(
-              width: tileWidth,
-              child: _buildSnapshotTileStream(
-                context,
-                icon: Icons.restaurant_menu,
+              width: w,
+              child: _SnapshotTileStream(
+                icon: Icons.restaurant_menu_rounded,
                 label: 'Meals',
                 collection: 'mealPlans',
-                color: Theme.of(context).colorScheme.secondary,
+                color: AppTheme.secondaryColor,
               ),
             ),
             SizedBox(
-              width: tileWidth,
-              child: _buildSnapshotTileStream(
-                context,
-                icon: Icons.psychology,
+              width: w,
+              child: _SnapshotTileStream(
+                icon: Icons.psychology_rounded,
                 label: 'Activities',
                 collection: 'activities',
-                color: Colors.indigo.shade400,
+                color: const Color(0xFF6366F1),
               ),
             ),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildSnapshotTileStream(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String collection,
-    required Color color,
-  }) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection(collection).snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          print('Failed to load $collection: ${snapshot.error}');
-        }
-        final value = snapshot.hasData ? snapshot.data!.size.toString() : '--';
-        return _buildSnapshotTile(
-          context,
-          icon: icon,
-          label: label,
-          value: value,
-          color: color,
-        );
-      },
-    );
-  }
-
-  Widget _buildSnapshotTile(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.18)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -340,49 +240,64 @@ class DashboardPage extends StatelessWidget {
           .doc(day)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          print('Failed to load today meals: ${snapshot.error}');
-        }
         final data = snapshot.data?.data() ?? {};
         final Map<String, dynamic> meals =
             (data['meals'] as Map<String, dynamic>?) ?? {};
         final entries = meals.entries
-            .where((entry) => entry.value.toString().trim().isNotEmpty)
+            .where((e) => e.value.toString().trim().isNotEmpty)
             .toList();
+
         return Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200),
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppTheme.borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.today, size: 18, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Text(
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.today_rounded,
+                      size: 16,
+                      color: Color(0xFFF97316),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
                     'Today\'s meals',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
               if (entries.isEmpty)
-                Text(
-                  'No meals planned yet',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    'No meals planned for today',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textTertiary,
+                    ),
                   ),
                 )
               else
                 ...entries.map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -391,15 +306,32 @@ class DashboardPage extends StatelessWidget {
                           height: 6,
                           margin: const EdgeInsets.only(top: 6),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: AppTheme.primaryColor,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            '${entry.key}: ${entry.value}',
-                            style: Theme.of(context).textTheme.bodySmall,
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${e.key}: ',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: e.value.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -413,20 +345,204 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroBadgeStream({
-    required IconData icon,
-    required String label,
-    required String collection,
-  }) {
+  Widget _buildAlertsSection(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection(collection).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('alerts')
+          .orderBy('timestamp', descending: true)
+          .limit(2)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          print('Failed to load $collection: ${snapshot.error}');
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          );
         }
-        final value = snapshot.hasData ? snapshot.data!.size.toString() : '--';
-        return _HeroBadge(icon: icon, label: label, value: value);
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: AppTheme.primaryColor,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'You\'re all caught up — no alerts.',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            IconData iconData = Icons.notifications_rounded;
+            final type = data['type'] ?? '';
+            if (type == 'health') iconData = Icons.health_and_safety_rounded;
+            if (type == 'nutrition') iconData = Icons.restaurant_menu_rounded;
+            if (type == 'growth') iconData = Icons.trending_up_rounded;
+            if (type == 'warning') iconData = Icons.warning_amber_rounded;
+            if (type == 'activity') iconData = Icons.psychology_rounded;
+
+            final priority = data['priority'] ?? 'Low';
+            final priorityColor = priority == 'High'
+                ? AppTheme.errorColor
+                : priority == 'Medium'
+                ? AppTheme.warningColor
+                : AppTheme.primaryColor;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/alerts'),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppTheme.borderColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: priorityColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(iconData, size: 18, color: priorityColor),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data['title'] ?? 'Alert',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            if ((data['description'] ?? '').isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  data['description'],
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: priorityColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          priority,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: priorityColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
       },
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _QuickActionCard(
+            icon: Icons.restaurant_menu_rounded,
+            label: 'Meal Plans',
+            color: const Color(0xFFF97316),
+            bgColor: const Color(0xFFFFF7ED),
+            onTap: () => Navigator.pushNamed(context, '/nutrition/meal-plan'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _QuickActionCard(
+            icon: Icons.psychology_rounded,
+            label: 'Brain Tips',
+            color: const Color(0xFF6366F1),
+            bgColor: const Color(0xFFEEF2FF),
+            onTap: () => Navigator.pushNamed(context, '/brain/nutrition-tips'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _QuickActionCard(
+            icon: Icons.monitor_weight_outlined,
+            label: 'Growth',
+            color: AppTheme.primaryColor,
+            bgColor: AppTheme.primarySurface,
+            onTap: () => Navigator.pushNamed(context, '/home'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, {Widget? action}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+            letterSpacing: -0.3,
+          ),
+        ),
+        if (action != null) action,
+      ],
     );
   }
 
@@ -440,171 +556,177 @@ class DashboardPage extends StatelessWidget {
       'Saturday',
       'Sunday',
     ];
-    final index = DateTime.now().weekday - 1;
-    return days[index.clamp(0, days.length - 1)];
-  }
-
-  Widget _buildAlertCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String chipLabel,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceTint,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(subtitle, style: theme.textTheme.bodyMedium),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  chipLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionPill(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.16),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return days[(DateTime.now().weekday - 1).clamp(0, 6)];
   }
 }
 
-class _HeroBadge extends StatelessWidget {
-  const _HeroBadge({
+class _HeroBadgeStream extends StatelessWidget {
+  const _HeroBadgeStream({
     required this.icon,
     required this.label,
-    required this.value,
+    required this.collection,
   });
 
   final IconData icon;
   final String label;
-  final String value;
+  final String collection;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.16),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: Colors.white),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection(collection).snapshots(),
+        builder: (context, snapshot) {
+          final value = snapshot.hasData
+              ? snapshot.data!.size.toString()
+              : '--';
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
               children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                Icon(icon, size: 16, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, this.action});
+class _SnapshotTileStream extends StatelessWidget {
+  const _SnapshotTileStream({
+    required this.icon,
+    required this.label,
+    required this.collection,
+    required this.color,
+  });
 
-  final String title;
-  final Widget? action;
+  final IconData icon;
+  final String label;
+  final String collection;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        if (action != null) action!,
-      ],
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection(collection).snapshots(),
+      builder: (context, snapshot) {
+        final value = snapshot.hasData ? snapshot.data!.size.toString() : '--';
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: color),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.bgColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color bgColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 24, color: color),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

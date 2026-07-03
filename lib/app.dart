@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/theme/theme_provider.dart';
 import 'package:nutritrack/features/auth/login_page.dart';
 import 'package:nutritrack/features/auth/onboarding_page.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
@@ -7,6 +8,7 @@ import 'package:nutritrack/features/auth/signup_page.dart';
 import 'package:nutritrack/features/dashboard/dashboard_page.dart';
 import 'package:nutritrack/features/children/children_page.dart';
 import 'package:nutritrack/features/children/child_detail_page.dart';
+import 'package:nutritrack/features/children/child_form_page.dart';
 import 'package:nutritrack/features/children/growth_input_page.dart';
 import 'package:nutritrack/features/children/growth_chart_page.dart';
 import 'package:nutritrack/features/children/epigenetic_risk_page.dart';
@@ -34,10 +36,13 @@ class NutriGeneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     return MaterialApp(
       title: 'NutriGene',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.themeMode,
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthGate(),
@@ -47,6 +52,8 @@ class NutriGeneApp extends StatelessWidget {
         '/signup': (context) => const SignupPage(),
 
         // Children routes
+        '/children': (context) => const ChildrenPage(),
+        '/child/form': (context) => const ChildFormPage(),
         '/child/details': (context) => const ChildDetailPage(),
         '/child/growth-input': (context) => const GrowthInputPage(),
         '/child/growth-chart': (context) => const GrowthChartPage(),
@@ -121,78 +128,49 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: const BoxDecoration(gradient: AppTheme.primaryGradient),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            child: _PageContainer(
-              key: ValueKey(_currentIndex),
-              child: _pages[_currentIndex],
-            ),
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          child: _PageContainer(
+            key: ValueKey(_currentIndex),
+            child: _pages[_currentIndex],
           ),
         ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: NavigationBar(
-              selectedIndex: _currentIndex,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard_customize),
-                  label: 'Dashboard',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.child_care_outlined),
-                  selectedIcon: Icon(Icons.child_care),
-                  label: 'Children',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.restaurant_menu_outlined),
-                  selectedIcon: Icon(Icons.restaurant_menu),
-                  label: 'Nutrition',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.psychology_outlined),
-                  selectedIcon: Icon(Icons.psychology),
-                  label: 'Brain',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.more_horiz),
-                  selectedIcon: Icon(Icons.more),
-                  label: 'More',
-                ),
-              ],
-            ),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard_rounded),
+            label: 'Dashboard',
           ),
-        ),
+          NavigationDestination(
+            icon: Icon(Icons.child_care_outlined),
+            selectedIcon: Icon(Icons.child_care_rounded),
+            label: 'Children',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.restaurant_menu_outlined),
+            selectedIcon: Icon(Icons.restaurant_menu_rounded),
+            label: 'Nutrition',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.psychology_outlined),
+            selectedIcon: Icon(Icons.psychology_rounded),
+            label: 'Brain',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz_rounded),
+            selectedIcon: Icon(Icons.more_rounded),
+            label: 'More',
+          ),
+        ],
       ),
     );
   }

@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDLptWfh-Ef4epP8SQvXsOfJaRWOcWVAA8',
-    appId: '1:936659046488:android:99a76a3fbb137a1b60ba2d',
+    appId: '1:936659046488:android:42c8473601ceef3360ba2d',
     messagingSenderId: '936659046488',
     projectId: 'nutrigene-fcb9e',
     storageBucket: 'nutrigene-fcb9e.firebasestorage.app',
@@ -66,10 +66,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAQImfueuByj2VnEyuYCqmardoKF03t1qI',
-    appId: '1:936659046488:ios:280a9b124176107e60ba2d',
+    appId: '1:936659046488:ios:2aa43445b1b15cca60ba2d',
     messagingSenderId: '936659046488',
     projectId: 'nutrigene-fcb9e',
     storageBucket: 'nutrigene-fcb9e.firebasestorage.app',
-    iosBundleId: 'com.example.nutritrack',
+    androidClientId: '936659046488-u05rfains0l3uq92k9di65un4jv8sc6f.apps.googleusercontent.com',
+    iosClientId: '936659046488-lnul7hd2tfrqpi2cjf9f05pvm2dpmtce.apps.googleusercontent.com',
+    iosBundleId: 'com.nutrigene.app',
   );
+
 }

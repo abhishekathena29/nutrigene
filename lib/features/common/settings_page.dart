@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -9,173 +12,191 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   String _selectedLanguage = 'English';
   String _selectedUnits = 'Metric';
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppTheme.backgroundColor,
+        title: const Text('Settings'),
+        leading: IconButton(
+          icon: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              size: 18,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          const Text(
-            'General',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Card(
+          const _SectionLabel(label: 'General'),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
             child: Column(
               children: [
-                SwitchListTile(
-                  title: const Text('Notifications'),
-                  subtitle: const Text('Receive alerts and reminders'),
+                _ToggleRow(
+                  icon: Icons.notifications_outlined,
+                  iconColor: AppTheme.primaryColor,
+                  iconBg: AppTheme.primarySurface,
+                  title: 'Notifications',
+                  subtitle: 'Receive alerts and reminders',
                   value: _notificationsEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _notificationsEnabled = value;
-                    });
-                  },
-                  secondary: const Icon(Icons.notifications),
+                  onChanged: (v) => setState(() => _notificationsEnabled = v),
                 ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  title: const Text('Dark Mode'),
-                  subtitle: const Text('Use dark theme'),
-                  value: _darkModeEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _darkModeEnabled = value;
-                    });
-                  },
-                  secondary: const Icon(Icons.dark_mode),
+                const Divider(height: 1, indent: 56),
+                _ToggleRow(
+                  icon: Icons.dark_mode_outlined,
+                  iconColor: const Color(0xFF7C3AED),
+                  iconBg: const Color(0xFFF5F3FF),
+                  title: 'Dark Mode',
+                  subtitle: 'Use dark theme',
+                  value: themeProvider.isDarkMode,
+                  onChanged: (v) => themeProvider.setDarkMode(v),
+                  isLast: true,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          const Text(
-            'Language & Region',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: const Text('Language'),
-                  subtitle: Text(_selectedLanguage),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showLanguageDialog();
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.straighten),
-                  title: const Text('Units'),
-                  subtitle: Text(_selectedUnits),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showUnitsDialog();
-                  },
-                ),
-              ],
+          // const _SectionLabel(label: 'Language & Region'),
+          // const SizedBox(height: 10),
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: AppTheme.surfaceColor,
+          //     borderRadius: BorderRadius.circular(18),
+          //     border: Border.all(color: AppTheme.borderColor),
+          //   ),
+          //   child: Column(
+          //     children: [
+          //       _NavRow(
+          //         icon: Icons.language_rounded,
+          //         iconColor: AppTheme.secondaryColor,
+          //         iconBg: const Color(0xFFEFF6FF),
+          //         title: 'Language',
+          //         value: _selectedLanguage,
+          //         onTap: _showLanguageDialog,
+          //       ),
+          //       const Divider(height: 1, indent: 56),
+          //       _NavRow(
+          //         icon: Icons.straighten_rounded,
+          //         iconColor: const Color(0xFFF97316),
+          //         iconBg: const Color(0xFFFFF7ED),
+          //         title: 'Units',
+          //         value: _selectedUnits,
+          //         onTap: _showUnitsDialog,
+          //         isLast: true,
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // const SizedBox(height: 20),
+          const _SectionLabel(label: 'Data & Privacy'),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.borderColor),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          const Text(
-            'Data & Privacy',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.cloud_upload),
-                  title: const Text('Backup Data'),
-                  subtitle: const Text('Save data to cloud'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Backing up data...')),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.download),
-                  title: const Text('Export Data'),
-                  subtitle: const Text('Download your data'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Exporting data...')),
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: const Text(
-                    'Clear All Data',
-                    style: TextStyle(color: Colors.red),
+                _NavRow(
+                  icon: Icons.cloud_upload_outlined,
+                  iconColor: AppTheme.primaryColor,
+                  iconBg: AppTheme.primarySurface,
+                  title: 'Backup Data',
+                  value: 'Save to cloud',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Backing up data...')),
                   ),
-                  subtitle: const Text('Permanently delete all data'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showClearDataDialog();
-                  },
+                ),
+                const Divider(height: 1, indent: 56),
+                _NavRow(
+                  icon: Icons.download_rounded,
+                  iconColor: AppTheme.secondaryColor,
+                  iconBg: const Color(0xFFEFF6FF),
+                  title: 'Export Data',
+                  value: 'Download your data',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Exporting data...')),
+                  ),
+                ),
+                const Divider(height: 1, indent: 56),
+                _NavRow(
+                  icon: Icons.delete_forever_rounded,
+                  iconColor: AppTheme.errorColor,
+                  iconBg: const Color(0xFFFEF2F2),
+                  title: 'Clear All Data',
+                  value: 'Permanently delete',
+                  onTap: _showClearDataDialog,
+                  isLast: true,
+                  titleColor: AppTheme.errorColor,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          const Text(
-            'Support',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Card(
+          const _SectionLabel(label: 'Support'),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.help),
-                  title: const Text('Help Center'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening help center...')),
-                    );
-                  },
+                _NavRow(
+                  icon: Icons.help_outline_rounded,
+                  iconColor: AppTheme.secondaryColor,
+                  iconBg: const Color(0xFFEFF6FF),
+                  title: 'Help Center',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening help center...')),
+                  ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.feedback),
-                  title: const Text('Send Feedback'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening feedback form...')),
-                    );
-                  },
+                const Divider(height: 1, indent: 56),
+                _NavRow(
+                  icon: Icons.feedback_outlined,
+                  iconColor: AppTheme.primaryColor,
+                  iconBg: AppTheme.primarySurface,
+                  title: 'Send Feedback',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening feedback form...')),
+                  ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.bug_report),
-                  title: const Text('Report a Bug'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening bug report...')),
-                    );
-                  },
+                const Divider(height: 1, indent: 56),
+                _NavRow(
+                  icon: Icons.bug_report_outlined,
+                  iconColor: const Color(0xFFF97316),
+                  iconBg: const Color(0xFFFFF7ED),
+                  title: 'Report a Bug',
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening bug report...')),
+                  ),
+                  isLast: true,
                 ),
               ],
             ),
@@ -188,123 +209,256 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showLanguageDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
           title: const Text('Select Language'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: const Text('English'),
-                value: 'English',
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Spanish'),
-                value: 'Spanish',
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('French'),
-                value: 'French',
-                groupValue: _selectedLanguage,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+          content: RadioGroup<String>(
+            groupValue: _selectedLanguage,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedLanguage = value);
+                Navigator.pop(ctx);
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: ['English', 'Spanish', 'French']
+                  .map(
+                    (lang) =>
+                        RadioListTile<String>(title: Text(lang), value: lang),
+                  )
+                  .toList(),
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   void _showUnitsDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
           title: const Text('Select Units'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: const Text('Metric (kg, cm)'),
-                value: 'Metric',
-                groupValue: _selectedUnits,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedUnits = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Imperial (lb, in)'),
-                value: 'Imperial',
-                groupValue: _selectedUnits,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedUnits = value!;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+          content: RadioGroup<String>(
+            groupValue: _selectedUnits,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _selectedUnits = value);
+                Navigator.pop(ctx);
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                RadioListTile<String>(
+                  title: Text('Metric (kg, cm)'),
+                  value: 'Metric',
+                ),
+                RadioListTile<String>(
+                  title: Text('Imperial (lb, in)'),
+                  value: 'Imperial',
+                ),
+              ],
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   void _showClearDataDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Clear All Data?'),
-          content: const Text(
-            'This will permanently delete all data. This action cannot be undone.',
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All Data?'),
+        content: const Text(
+          'This will permanently delete all data. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Data cleared successfully')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Data cleared successfully')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Clear'),
-            ),
-          ],
-        );
-      },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
     );
   }
 }
 
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.textTertiary,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+}
+
+class _ToggleRow extends StatelessWidget {
+  const _ToggleRow({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.isLast = false,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppTheme.primaryColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavRow extends StatelessWidget {
+  const _NavRow({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.title,
+    required this.onTap,
+    this.value,
+    this.isLast = false,
+    this.titleColor = AppTheme.textPrimary,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String title;
+  final String? value;
+  final VoidCallback onTap;
+  final bool isLast;
+  final Color titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: iconColor),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                    ),
+                  ),
+                  if (value != null)
+                    Text(
+                      value!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

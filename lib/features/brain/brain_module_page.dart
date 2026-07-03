@@ -1,73 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/core/theme/app_theme.dart';
 
 class BrainModulePage extends StatelessWidget {
   const BrainModulePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
+        backgroundColor: AppTheme.backgroundColor,
         title: const Text('Brain & Development'),
-        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
+            child: const Icon(Icons.arrow_back_rounded, size: 18, color: AppTheme.textPrimary),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          // Hero banner
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF1FA2FF),
-                  Color(0xFF12D8FA),
-                  Color(0xFFA6FFCB),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.18),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+              gradient: AppTheme.brainGradient,
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.psychology,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                  child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 28),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
+                const SizedBox(width: 16),
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Support cognitive growth with joyful guidance.',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        'Cognitive Growth Hub',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 4),
                       Text(
-                        'Curated by neuroscientists and nutritionists to keep every milestone smooth.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.88),
+                        'Curated by neuroscientists and nutritionists for every milestone.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          height: 1.4,
                         ),
                       ),
                     ],
@@ -76,94 +75,114 @@ class BrainModulePage extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 18),
-          _buildMenuCard(
-            context,
-            icon: Icons.psychology,
+          const SizedBox(height: 24),
+
+          const Text(
+            'Explore',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          _MenuCard(
+            icon: Icons.psychology_rounded,
             title: 'Brain Development Overview',
-            description: 'Learn about brain development stages',
-            color: Colors.purple,
+            description: 'Learn about development stages from 0–12+ years',
+            color: const Color(0xFF7C3AED),
+            bgColor: const Color(0xFFF5F3FF),
             route: '/brain/overview',
           ),
-          const SizedBox(height: 12),
-          _buildMenuCard(
-            context,
-            icon: Icons.extension,
+          const SizedBox(height: 10),
+          _MenuCard(
+            icon: Icons.extension_rounded,
             title: 'Brain-Boosting Activities',
-            description: 'Activities to enhance cognitive skills',
-            color: Colors.blue,
+            description: 'Activities to enhance cognitive and motor skills',
+            color: AppTheme.secondaryColor,
+            bgColor: const Color(0xFFEFF6FF),
             route: '/brain/activities',
           ),
-          const SizedBox(height: 12),
-          _buildMenuCard(
-            context,
-            icon: Icons.food_bank,
+          const SizedBox(height: 10),
+          _MenuCard(
+            icon: Icons.local_dining_rounded,
             title: 'Brain Nutrition Tips',
-            description: 'Foods that support brain health',
-            color: Colors.green,
+            description: 'Foods and nutrients that support brain health',
+            color: AppTheme.primaryColor,
+            bgColor: AppTheme.primarySurface,
             route: '/brain/nutrition-tips',
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMenuCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required String route,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withOpacity(0.14)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => Navigator.pushNamed(context, route),
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 26),
+class _MenuCard extends StatelessWidget {
+  const _MenuCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.bgColor,
+    required this.route,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+  final Color bgColor;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(description, style: theme.textTheme.bodyMedium),
-                  ],
-                ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    description,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 18,
-                color: theme.colorScheme.primary,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textTertiary),
+          ],
         ),
       ),
     );

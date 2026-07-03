@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/app_logo.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -14,22 +15,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final List<_OnboardingSlide> _slides = const [
     _OnboardingSlide(
-      title: 'Track growth milestones',
+      title: 'Track growth\nmilestones',
       description:
           'Monitor children\'s growth using WHO standards and keep every check-in organized.',
-      icon: Icons.trending_up,
+      icon: Icons.trending_up_rounded,
+      gradient: [Color(0xFF059669), Color(0xFF10B981)],
     ),
     _OnboardingSlide(
-      title: 'AI-powered nutrition guidance',
+      title: 'AI-powered\nnutrition guidance',
       description:
           'Get personalized nutrition advice powered by AI and turn insights into action.',
-      icon: Icons.auto_awesome,
+      icon: Icons.auto_awesome_rounded,
+      gradient: [Color(0xFF0EA5E9), Color(0xFF6366F1)],
     ),
     _OnboardingSlide(
-      title: 'Support every child',
+      title: 'Support every\nchild',
       description:
           'Coordinate caregivers and NGOs to make healthy outcomes possible everywhere.',
-      icon: Icons.volunteer_activism,
+      icon: Icons.volunteer_activism_rounded,
+      gradient: [Color(0xFF6366F1), Color(0xFFEC4899)],
     ),
   ];
 
@@ -39,160 +43,156 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.dispose();
   }
 
-  void _handleContinue() {
+  void _handleNext() {
     if (_currentIndex < _slides.length - 1) {
       _controller.nextPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
       );
     } else {
       Navigator.of(context).pushNamed('/login');
     }
   }
 
-  void _handleBack() {
-    if (_currentIndex > 0) {
-      _controller.previousPage(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+        child: Column(
+          children: [
+            // Top bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 16, 0),
+              child: Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.favorite,
-                      color: AppTheme.primaryColor,
-                      size: 20,
-                    ),
+                  const AppLogo(
+                    size: 34,
+                    padding: 5,
+                    backgroundColor: Colors.white,
+                    borderRadius: 10,
+                    showBorder: true,
                   ),
                   const SizedBox(width: 10),
-                  Text(
+                  const Text(
                     'NutriGene',
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.of(context).pushNamed('/login'),
-                    child: const Text('Skip to login'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.textSecondary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    child: const Text('Skip'),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: PageView.builder(
-                  controller: _controller,
-                  itemCount: _slides.length,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentIndex = index;
-                    });
-                  },
-                  itemBuilder: (context, index) {
-                    return _OnboardingSlideCard(slide: _slides[index]);
-                  },
-                ),
+            ),
+
+            // Slides
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: _slides.length,
+                onPageChanged: (i) => setState(() => _currentIndex = i),
+                itemBuilder: (context, index) =>
+                    _OnboardingSlideView(slide: _slides[index], size: size),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 6,
-                    width: index == _currentIndex ? 20 : 6,
-                    decoration: BoxDecoration(
-                      color: index == _currentIndex
-                          ? AppTheme.primaryColor
-                          : AppTheme.primaryColor.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(99),
+            ),
+
+            // Bottom controls
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+              child: Column(
+                children: [
+                  // Dots
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      _slides.length,
+                      (i) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        height: 6,
+                        width: i == _currentIndex ? 24 : 6,
+                        decoration: BoxDecoration(
+                          color: i == _currentIndex
+                              ? AppTheme.primaryColor
+                              : AppTheme.borderColor,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Swipe or tap Next to continue',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _currentIndex == 0 ? null : _handleBack,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                  const SizedBox(height: 24),
+
+                  // Next / Get Started button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _handleNext,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
+                        elevation: 0,
                       ),
-                      child: const Icon(Icons.arrow_back),
+                      child: Text(
+                        _currentIndex == _slides.length - 1
+                            ? 'Get Started'
+                            : 'Continue',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _handleContinue,
-                      child: _currentIndex == _slides.length - 1
-                          ? const Text('Continue')
-                          : const Icon(Icons.arrow_forward),
-                    ),
+                  const SizedBox(height: 14),
+
+                  // Already have account
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed('/login'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                        child: const Text(
+                          'Sign in',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.of(context).pushNamed('/login'),
-                child: const Text('Already have an account? Log in'),
-              ),
-              const SizedBox(height: 4),
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pushNamed('/signup'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text('I\'m new, sign me up'),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'By logging in or registering, you agree to our Terms of Service and Privacy Policy.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -204,80 +204,109 @@ class _OnboardingSlide {
     required this.title,
     required this.description,
     required this.icon,
+    required this.gradient,
   });
 
   final String title;
   final String description;
   final IconData icon;
+  final List<Color> gradient;
 }
 
-class _OnboardingSlideCard extends StatelessWidget {
-  const _OnboardingSlideCard({required this.slide});
+class _OnboardingSlideView extends StatelessWidget {
+  const _OnboardingSlideView({required this.slide, required this.size});
 
   final _OnboardingSlide slide;
+  final Size size;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFEAF7F3), Color(0xFFF3F7FF)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+      child: Column(
+        children: [
+          // Illustration card
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: slide.gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28),
               ),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+              child: Stack(
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    right: -30,
+                    top: -30,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                  child: Icon(
-                    slide.icon,
-                    size: 64,
-                    color: AppTheme.primaryColor,
+                  Positioned(
+                    left: -20,
+                    bottom: 40,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  slide.title,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  // Icon
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(slide.icon, size: 52, color: Colors.white),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  slide.description,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+
+          const SizedBox(height: 32),
+
+          // Text content
+          Text(
+            slide.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+              letterSpacing: -1.0,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            slide.description,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppTheme.textSecondary,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

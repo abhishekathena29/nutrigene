@@ -64,9 +64,14 @@ class AuthenProvider extends ChangeNotifier {
         provider.setCustomParameters({'login_hint': 'user@example.com'});
         return _auth.signInWithPopup(provider);
       }
-
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
+      final GoogleSignIn signIn = GoogleSignIn.instance;
+      await signIn.initialize(
+        // clientId:
+        //     '936659046488-sv1cjeh6r3osf0fvls93jeeetf7326of.apps.googleusercontent.com',
+        // serverClientId:
+        //     '936659046488-sv1cjeh6r3osf0fvls93jeeetf7326of.apps.googleusercontent.com',
+      );
+      final GoogleSignInAccount googleUser = await signIn.authenticate();
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
@@ -98,7 +103,8 @@ class AuthenProvider extends ChangeNotifier {
       _error = _friendlyMessage(e);
       notifyListeners();
     } catch (e) {
-      _error = 'Something went wrong. Please try again.';
+      _error = e.toString();
+      debugPrint(e.toString());
       notifyListeners();
     } finally {
       _setLoading(false);

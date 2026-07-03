@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/features/children/child_form_page.dart';
 import 'package:nutritrack/features/children/provider/children_provider.dart';
 import 'package:provider/provider.dart';
@@ -14,13 +15,11 @@ class _ChildrenPageState extends State<ChildrenPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch children once when the page is first shown.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ChildrenProvider>().loadChildren();
     });
   }
 
-  /// Opens the form. Pass [child] to edit, leave null to add new.
   Future<void> _openForm({ChildProfile? child}) async {
     final result = await Navigator.push<bool>(
       context,
@@ -31,7 +30,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            child == null ? 'Child has been added' : 'Child has been updated',
+            child == null ? 'Child profile added.' : 'Child profile updated.',
           ),
         ),
       );
@@ -41,44 +40,78 @@ class _ChildrenPageState extends State<ChildrenPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Children Profiles')),
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppTheme.backgroundColor,
+        title: const Text('Children'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: GestureDetector(
+              onTap: _openForm,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                    SizedBox(width: 5),
+                    Text(
+                      'Add',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Consumer<ChildrenProvider>(
         builder: (context, provider, _) {
           return RefreshIndicator(
             onRefresh: provider.loadChildren,
+            color: AppTheme.primaryColor,
             child: _buildBody(provider),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openForm,
-        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildBody(ChildrenProvider provider) {
-    // Show full-screen spinner only on the very first load.
     if (provider.isLoading && provider.children.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null && provider.children.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              provider.error!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: provider.loadChildren,
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.errorColor),
+              const SizedBox(height: 16),
+              Text(
+                provider.error!,
+                style: const TextStyle(color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: provider.loadChildren,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -86,58 +119,82 @@ class _ChildrenPageState extends State<ChildrenPage> {
     final children = provider.children;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 16),
-          child: Text(
-            'Manage children profiles and track their growth',
-            style: TextStyle(fontSize: 15, color: Colors.grey),
-          ),
-        ),
-
-        // Thin progress bar when refreshing while list is visible.
         if (provider.isLoading && children.isNotEmpty)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: LinearProgressIndicator(),
+          const LinearProgressIndicator(
+            backgroundColor: Colors.transparent,
           ),
 
-        // Empty state
         if (children.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const Icon(Icons.child_care, size: 48, color: Colors.grey),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'No children added yet',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: _openForm,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add your first child'),
-                  ),
-                ],
+          _buildEmptyState()
+        else ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              '${children.length} ${children.length == 1 ? 'profile' : 'profiles'}',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
+          for (final child in children)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ChildCard(
+                child: child,
+                onEdit: () => _openForm(child: child),
+                onDelete: () => _confirmDelete(child),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
 
-        // Child cards
-        for (final child in children)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _ChildCard(
-              child: child,
-              onEdit: () => _openForm(child: child),
-              onDelete: () => _confirmDelete(child),
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 60),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySurface,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.child_care_rounded,
+              size: 40,
+              color: AppTheme.primaryColor,
             ),
           ),
-      ],
+          const SizedBox(height: 20),
+          const Text(
+            'No children yet',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add a child profile to start\ntracking their growth and nutrition.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _openForm,
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: const Text('Add first child'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -145,16 +202,22 @@ class _ChildrenPageState extends State<ChildrenPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete profile?'),
-        content: Text('Remove ${child.name} permanently?'),
+        content: Text(
+          'Remove ${child.name}\'s profile permanently? This cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+            ),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -163,11 +226,11 @@ class _ChildrenPageState extends State<ChildrenPage> {
       try {
         await context.read<ChildrenProvider>().deleteChild(child.id);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('${child.name} deleted')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${child.name} deleted.')),
+          );
         }
-      } catch (e) {
+      } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to delete. Try again.')),
@@ -177,8 +240,6 @@ class _ChildrenPageState extends State<ChildrenPage> {
     }
   }
 }
-
-// ── Child card extracted into its own widget for clean separation ──────────
 
 class _ChildCard extends StatelessWidget {
   const _ChildCard({
@@ -194,71 +255,149 @@ class _ChildCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFemale = child.gender.toLowerCase().startsWith('f');
-    final color = isFemale ? Colors.pink : Colors.blue;
+    final avatarColor = isFemale ? const Color(0xFFEC4899) : const Color(0xFF0EA5E9);
+    final avatarBg = isFemale ? const Color(0xFFFDF2F8) : const Color(0xFFEFF6FF);
+    final dob = child.dob.toLocal().toString().split(' ').first;
 
-    return Card(
-      child: InkWell(
-        onTap: () =>
-            Navigator.pushNamed(context, '/child/details', arguments: child.id),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: color.withValues(alpha: 0.15),
-                child: Icon(
-                  isFemale ? Icons.girl : Icons.boy,
-                  size: 30,
-                  color: color,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      child.name,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'DOB: ${child.dob.toLocal().toString().split(' ').first}',
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                    if (child.guardianName.isNotEmpty)
-                      Text(
-                        'Guardian: ${child.guardianName}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 20),
-                onPressed: onEdit,
-                tooltip: 'Edit',
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  size: 20,
-                  color: Colors.red,
-                ),
-                onPressed: onDelete,
-                tooltip: 'Delete',
-              ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () =>
+          Navigator.pushNamed(context, '/child/details', arguments: child.id),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.borderColor),
         ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: avatarBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isFemale ? Icons.girl_rounded : Icons.boy_rounded,
+                size: 30,
+                color: avatarColor,
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    child.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _InfoChip(
+                        label: child.gender,
+                        color: avatarColor,
+                      ),
+                      const SizedBox(width: 6),
+                      _InfoChip(
+                        label: dob,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ],
+                  ),
+                  if (child.guardianName.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Guardian: ${child.guardianName}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Actions
+            Column(
+              children: [
+                _IconActionButton(
+                  icon: Icons.edit_rounded,
+                  onTap: onEdit,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(height: 6),
+                _IconActionButton(
+                  icon: Icons.delete_outline_rounded,
+                  onTap: onDelete,
+                  color: AppTheme.errorColor,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _IconActionButton extends StatelessWidget {
+  const _IconActionButton({
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }
