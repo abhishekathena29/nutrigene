@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
@@ -19,6 +22,9 @@ class _SignupPageState extends State<SignupPage> {
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+
+  // Google sign-in is offered on Android (and web) only, never on iOS.
+  bool get _showGoogleSignIn => kIsWeb || Platform.isAndroid;
 
   @override
   void dispose() {
@@ -268,48 +274,49 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Divider
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textTertiary,
-                            fontWeight: FontWeight.w500,
+                  // Google sign in — Android (and web) only, hidden on iOS.
+                  if (_showGoogleSignIn) ...[
+                    // Divider
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textTertiary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Google
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: auth.isLoading ? null : _handleGoogleSignIn,
-                      icon: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4285F4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.g_mobiledata,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      label: const Text('Continue with Google'),
+                        const Expanded(child: Divider()),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: auth.isLoading ? null : _handleGoogleSignIn,
+                        icon: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF4285F4),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.g_mobiledata,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                        label: const Text('Continue with Google'),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Terms
                   Text(

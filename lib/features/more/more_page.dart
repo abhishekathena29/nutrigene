@@ -188,6 +188,23 @@ class MorePage extends StatelessWidget {
               label: const Text('Sign Out', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Delete account
+          Center(
+            child: TextButton.icon(
+              onPressed: () => _handleDeleteAccount(context),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.errorColor,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              icon: const Icon(Icons.delete_forever_rounded, size: 18),
+              label: const Text(
+                'Delete Account',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           const Center(
             child: Text(
@@ -198,6 +215,47 @@ class MorePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _handleDeleteAccount(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete account?'),
+        content: const Text(
+          'This will permanently delete your account and cannot be undone. '
+          'All associated data will be lost.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppTheme.errorColor),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final auth = context.read<AuthenProvider>();
+    auth.clearError();
+    final success = await auth.deleteAccount();
+    if (!context.mounted) return;
+
+    if (success) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    } else if (auth.error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(auth.error!)));
+    }
   }
 }
 

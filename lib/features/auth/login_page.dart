@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
@@ -15,6 +18,9 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  // Google sign-in is offered on Android (and web) only, never on iOS.
+  bool get _showGoogleSignIn => kIsWeb || Platform.isAndroid;
 
   @override
   void dispose() {
@@ -217,39 +223,41 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Divider
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textTertiary,
-                            fontWeight: FontWeight.w500,
+                  // Google sign in — Android (and web) only, hidden on iOS.
+                  if (_showGoogleSignIn) ...[
+                    // Divider
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textTertiary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Google sign in
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: auth.isLoading ? null : _handleGoogleSignIn,
-                      icon: SizedBox(
-                        height: 25,
-                        child: Image.asset("assets/google.png"),
-                      ),
-                      label: const Text('Continue with Google'),
+                        const Expanded(child: Divider()),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: auth.isLoading ? null : _handleGoogleSignIn,
+                        icon: SizedBox(
+                          height: 25,
+                          child: Image.asset("assets/google.png"),
+                        ),
+                        label: const Text('Continue with Google'),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ] else
+                    const SizedBox(height: 8),
 
                   // Sign up link
                   Row(

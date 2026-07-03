@@ -56,6 +56,25 @@ class AuthenProvider extends ChangeNotifier {
     await _runAuthAction(_auth.signOut);
   }
 
+  /// Permanently deletes the currently signed-in user's account.
+  ///
+  /// Returns `true` on success. If Firebase requires a fresh login before
+  /// deletion, [error] is set to a friendly message and `false` is returned.
+  Future<bool> deleteAccount() async {
+    final result = await _runAuthAction(() async {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw FirebaseAuthException(
+          code: 'no-current-user',
+          message: 'No account is currently signed in.',
+        );
+      }
+      await user.delete();
+      return true;
+    });
+    return result ?? false;
+  }
+
   Future<UserCredential?> signInWithGoogle() async {
     return _runAuthAction(() async {
       if (kIsWeb) {
@@ -133,6 +152,10 @@ class AuthenProvider extends ChangeNotifier {
         return 'Password should be at least 6 characters.';
       case 'operation-not-allowed':
         return 'Email/password sign-in is not enabled.';
+      case 'requires-recent-login':
+        return 'For your security, please sign in again before deleting your account.';
+      case 'no-current-user':
+        return 'No account is currently signed in.';
       default:
         return e.message ?? 'Authentication failed. Please try again.';
     }
