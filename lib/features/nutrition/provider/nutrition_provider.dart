@@ -39,8 +39,11 @@ class MealPlan {
 }
 
 class NutritionProvider extends ChangeNotifier {
+  static const String _defaultGeminiModel = 'gemini-1.5-flash';
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _geminiApiKey;
+  String? _geminiModel;
 
   Map<String, MealPlan> _mealPlans = {};
   bool _loadingPlans = false;
@@ -54,17 +57,28 @@ class NutritionProvider extends ChangeNotifier {
   String? get aiError => _aiError;
   String? get symptomAnalysis => _symptomAnalysis;
 
-  Future<String?> _getGeminiApiKey() async {
+  Future<void> _loadGeminiConfig() async {
     if (_geminiApiKey != null && _geminiApiKey!.isNotEmpty) {
-      return _geminiApiKey;
+      return;
     }
     try {
       final doc = await _firestore.collection('appConfig').doc('gemini').get();
       _geminiApiKey = (doc.data()?['apiKey'] as String?)?.trim();
+      final model = (doc.data()?['model'] as String?)?.trim();
+      _geminiModel = (model != null && model.isNotEmpty) ? model : null;
     } catch (e) {
-      print('Failed to load Gemini API key: $e');
+      print('Failed to load Gemini config: $e');
     }
+  }
+
+  Future<String?> _getGeminiApiKey() async {
+    await _loadGeminiConfig();
     return _geminiApiKey;
+  }
+
+  Future<String> _getGeminiModelName() async {
+    await _loadGeminiConfig();
+    return _geminiModel ?? _defaultGeminiModel;
   }
 
   Future<void> loadMealPlans() async {
@@ -127,7 +141,7 @@ class NutritionProvider extends ChangeNotifier {
 
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: await _getGeminiModelName(),
         apiKey: apiKey,
       );
       final prompt =
@@ -190,7 +204,7 @@ class NutritionProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: await _getGeminiModelName(),
         apiKey: apiKey,
       );
       final prompt = '''
