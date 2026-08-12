@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 
 class NutritionPage extends StatelessWidget {
   const NutritionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
         scrolledUnderElevation: 0,
-        title: const Text('Nutrition'),
+        title: Text(l10n.navNutrition),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -38,22 +41,22 @@ class NutritionPage extends StatelessWidget {
                   child: const Icon(Icons.restaurant_menu_rounded, color: Colors.white, size: 26),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nutrition Hub',
-                        style: TextStyle(
+                        l10n.nutritionHubTitle,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Meal plans, recipes, and nutritional insights.',
-                        style: TextStyle(
+                        l10n.nutritionHubSubtitle,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                           height: 1.4,
@@ -67,13 +70,13 @@ class NutritionPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          const _SectionLabel(label: 'EXPLORE'),
+          _SectionLabel(label: l10n.nutritionExploreLabel),
           const SizedBox(height: 12),
 
           _MenuCard(
             icon: Icons.shopping_basket_outlined,
-            title: 'Food Access & Affordability',
-            description: 'Nutritious options at affordable prices',
+            title: l10n.nutritionFoodAccessTitle,
+            description: l10n.nutritionFoodAccessDesc,
             color: AppTheme.primaryColor,
             bgColor: AppTheme.primarySurface,
             route: '/nutrition/access',
@@ -81,8 +84,8 @@ class NutritionPage extends StatelessWidget {
           const SizedBox(height: 12),
           _MenuCard(
             icon: Icons.calendar_month_outlined,
-            title: 'Meal Plans',
-            description: 'AI-powered weekly meal suggestions',
+            title: l10n.dashboardMealPlansAction,
+            description: l10n.nutritionMealPlansDesc,
             color: const Color(0xFFF97316),
             bgColor: const Color(0xFFFFF7ED),
             route: '/nutrition/meal-plan',
@@ -90,8 +93,8 @@ class NutritionPage extends StatelessWidget {
           const SizedBox(height: 12),
           _MenuCard(
             icon: Icons.menu_book_outlined,
-            title: 'Recipes',
-            description: 'Nutritious recipes designed for children',
+            title: l10n.nutritionRecipesTitle,
+            description: l10n.nutritionRecipesDesc,
             color: AppTheme.secondaryColor,
             bgColor: const Color(0xFFEFF6FF),
             route: '/nutrition/recipes',
@@ -99,12 +102,14 @@ class NutritionPage extends StatelessWidget {
           const SizedBox(height: 12),
           _MenuCard(
             icon: Icons.health_and_safety_outlined,
-            title: 'Symptoms Checker',
-            description: 'Check for nutritional deficiencies',
+            title: l10n.nutritionSymptomsTitle,
+            description: l10n.nutritionSymptomsDesc,
             color: const Color(0xFFEF4444),
             bgColor: const Color(0xFFFEF2F2),
             route: '/nutrition/symptoms',
           ),
+          const SizedBox(height: 24),
+          const SourcesLink(),
         ],
       ),
     );

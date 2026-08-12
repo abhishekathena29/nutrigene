@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
 import 'package:nutritrack/features/children/provider/children_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -166,6 +167,8 @@ class _EpigeneticRiskPageState extends State<EpigeneticRiskPage> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          const SourcesLink(),
           const SizedBox(height: 24),
 
           if (records.isEmpty) ...[

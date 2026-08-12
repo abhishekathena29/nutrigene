@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
 import 'package:nutritrack/features/nutrition/provider/nutrition_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -81,6 +82,8 @@ class _SymptomsCheckerPageState extends State<SymptomsCheckerPage> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          const SourcesLink(),
           const SizedBox(height: 20),
 
           Row(

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        title: const Text('About NutriGene'),
+        title: Text(l10n.moreAboutNutriGene),
         leading: IconButton(
           icon: Container(
             width: 38,
@@ -55,9 +58,9 @@ class AboutPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Version 1.0.0',
-                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                Text(
+                  l10n.aboutVersion,
+                  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -65,7 +68,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 28),
 
           // Mission
-          const _SectionTitle(title: 'Our Mission'),
+          _SectionTitle(title: l10n.aboutOurMission),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(18),
@@ -74,9 +77,9 @@ class AboutPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppTheme.borderColor),
             ),
-            child: const Text(
-              'NutriGene is an AI-powered nutrition tracker and assistant designed to combat child malnutrition through personalized nutrition recommendations, growth monitoring, and early intervention.',
-              style: TextStyle(
+            child: Text(
+              l10n.aboutMissionBody,
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.textPrimary,
                 height: 1.65,
@@ -86,7 +89,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Features
-          const _SectionTitle(title: 'Key Features'),
+          _SectionTitle(title: l10n.aboutKeyFeatures),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -100,42 +103,40 @@ class AboutPage extends StatelessWidget {
                   icon: Icons.trending_up_rounded,
                   color: AppTheme.primaryColor,
                   bgColor: AppTheme.primarySurface,
-                  title: 'Growth Tracking',
-                  description: 'Monitor children\'s growth using WHO standards',
+                  title: l10n.aboutFeatureGrowthTitle,
+                  description: l10n.aboutFeatureGrowthDesc,
                 ),
                 const Divider(height: 1, indent: 70),
                 _FeatureRow(
                   icon: Icons.auto_awesome_rounded,
                   color: AppTheme.secondaryColor,
                   bgColor: const Color(0xFFEFF6FF),
-                  title: 'AI Recommendations',
-                  description: 'Personalized nutrition advice powered by AI',
+                  title: l10n.aboutFeatureAiTitle,
+                  description: l10n.aboutFeatureAiDesc,
                 ),
                 const Divider(height: 1, indent: 70),
                 _FeatureRow(
                   icon: Icons.science_rounded,
                   color: const Color(0xFF7C3AED),
                   bgColor: const Color(0xFFF5F3FF),
-                  title: 'Epigenetic Risk Assessment',
-                  description: 'Early detection of nutritional deficiencies',
+                  title: l10n.aboutFeatureEpigeneticTitle,
+                  description: l10n.aboutFeatureEpigeneticDesc,
                 ),
                 const Divider(height: 1, indent: 70),
                 _FeatureRow(
                   icon: Icons.psychology_rounded,
                   color: const Color(0xFFF97316),
                   bgColor: const Color(0xFFFFF7ED),
-                  title: 'Brain Development',
-                  description:
-                      'Activities and nutrition tips for cognitive growth',
+                  title: l10n.aboutFeatureBrainTitle,
+                  description: l10n.aboutFeatureBrainDesc,
                 ),
                 const Divider(height: 1, indent: 70),
                 _FeatureRow(
                   icon: Icons.business_rounded,
                   color: const Color(0xFF6366F1),
                   bgColor: const Color(0xFFEEF2FF),
-                  title: 'NGO Support',
-                  description:
-                      'Tools for organizations managing multiple children',
+                  title: l10n.aboutFeatureNgoTitle,
+                  description: l10n.aboutFeatureNgoDesc,
                   isLast: true,
                 ),
               ],
@@ -150,11 +151,11 @@ class AboutPage extends StatelessWidget {
               gradient: AppTheme.heroGradient,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 Text(
-                  'Together, we can end child malnutrition',
-                  style: TextStyle(
+                  l10n.aboutImpactTitle,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -162,10 +163,10 @@ class AboutPage extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
-                  'NutriGene is expanding its reach to help NGOs, caregivers, and health workers monitor child growth, combat malnutrition, and provide actionable AI insights worldwide.',
-                  style: TextStyle(
+                  l10n.aboutImpactBody,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white,
                     height: 1.6,
@@ -178,7 +179,7 @@ class AboutPage extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Contact
-          const _SectionTitle(title: 'Get in Touch'),
+          _SectionTitle(title: l10n.aboutGetInTouch),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -192,7 +193,7 @@ class AboutPage extends StatelessWidget {
                   icon: Icons.email_outlined,
                   iconColor: AppTheme.primaryColor,
                   iconBg: AppTheme.primarySurface,
-                  label: 'Email',
+                  label: l10n.moreEmailLabel,
                   value: 'support@nutrigene.org',
                   onTap: () {},
                 ),
@@ -201,7 +202,7 @@ class AboutPage extends StatelessWidget {
                   icon: Icons.language_rounded,
                   iconColor: AppTheme.secondaryColor,
                   iconBg: const Color(0xFFEFF6FF),
-                  label: 'Website',
+                  label: l10n.aboutWebsiteLabel,
                   value: 'www.nutrigene.org',
                   onTap: () {},
                 ),
@@ -210,20 +211,26 @@ class AboutPage extends StatelessWidget {
                   icon: Icons.share_outlined,
                   iconColor: const Color(0xFF7C3AED),
                   iconBg: const Color(0xFFF5F3FF),
-                  label: 'Social Media',
-                  value: 'Follow us on social platforms',
+                  label: l10n.aboutSocialMediaLabel,
+                  value: l10n.aboutSocialMediaValue,
                   onTap: () {},
                   isLast: true,
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 24),
+
+          // Sources & medical disclaimer
+          _SectionTitle(title: l10n.aboutMedicalInfo),
+          const SizedBox(height: 12),
+          const SourcesLink(),
           const SizedBox(height: 28),
 
-          const Center(
+          Center(
             child: Text(
-              '© 2025 NutriGene. All rights reserved.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+              l10n.aboutCopyright,
+              style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary),
             ),
           ),
         ],

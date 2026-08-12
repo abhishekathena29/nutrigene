@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -30,12 +31,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     final auth = context.read<AuthenProvider>();
     auth.clearError();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (email.isEmpty || password.isEmpty) {
-      _showMessage('Please enter your email and password.');
+      _showMessage(l10n.loginPleaseEnterCreds);
       return;
     }
     final credential = await auth.signIn(email: email, password: password);
@@ -48,17 +50,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleReset() async {
+    final l10n = AppLocalizations.of(context)!;
     final auth = context.read<AuthenProvider>();
     auth.clearError();
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showMessage('Enter your email to reset your password.');
+      _showMessage(l10n.loginEnterEmailToReset);
       return;
     }
     await auth.sendPasswordReset(email);
     if (!mounted) return;
     if (auth.error == null) {
-      _showMessage('Password reset link sent to $email.');
+      _showMessage(l10n.loginResetLinkSent(email));
     } else {
       _showMessage(auth.error!);
     }
@@ -109,6 +112,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Consumer<AuthenProvider>(
         builder: (context, auth, _) {
+          final l10n = AppLocalizations.of(context)!;
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -126,9 +130,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 24),
                   // Header
-                  const Text(
-                    'Welcome\nback',
-                    style: TextStyle(
+                  Text(
+                    l10n.loginWelcomeBack,
+                    style: const TextStyle(
                       fontSize: 38,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
@@ -137,9 +141,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Sign in to continue tracking and supporting healthy growth.',
-                    style: TextStyle(
+                  Text(
+                    l10n.loginSubtitle,
+                    style: const TextStyle(
                       fontSize: 15,
                       color: AppTheme.textSecondary,
                       height: 1.5,
@@ -148,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 36),
 
                   // Email
-                  _FieldLabel(label: 'Email address'),
+                  _FieldLabel(label: l10n.loginEmailLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _emailController,
@@ -162,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
 
                   // Password
-                  _FieldLabel(label: 'Password'),
+                  _FieldLabel(label: l10n.loginPasswordLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
@@ -199,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding: EdgeInsets.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text('Forgot password?'),
+                      child: Text(l10n.loginForgotPassword),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -218,7 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Sign in'),
+                          : Text(l10n.loginSignInAction),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -232,8 +236,8 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'or',
-                            style: TextStyle(
+                            l10n.loginOrDivider,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppTheme.textTertiary,
                               fontWeight: FontWeight.w500,
@@ -252,7 +256,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: 25,
                           child: Image.asset("assets/google.png"),
                         ),
-                        label: const Text('Continue with Google'),
+                        label: Text(l10n.loginContinueWithGoogle),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -263,9 +267,9 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "Don't have an account?",
-                        style: TextStyle(color: AppTheme.textSecondary),
+                      Text(
+                        l10n.loginNoAccount,
+                        style: const TextStyle(color: AppTheme.textSecondary),
                       ),
                       TextButton(
                         onPressed: () =>
@@ -273,7 +277,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
-                        child: const Text('Sign up'),
+                        child: Text(l10n.loginSignUpLink),
                       ),
                     ],
                   ),

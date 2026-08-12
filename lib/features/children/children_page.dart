@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/features/children/child_form_page.dart';
 import 'package:nutritrack/features/children/provider/children_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class ChildrenPage extends StatefulWidget {
@@ -21,6 +22,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
   }
 
   Future<void> _openForm({ChildProfile? child}) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => ChildFormPage(child: child)),
@@ -30,7 +32,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            child == null ? 'Child profile added.' : 'Child profile updated.',
+            child == null ? l10n.childrenAddedMessage : l10n.childrenUpdatedMessage,
           ),
         ),
       );
@@ -39,39 +41,42 @@ class _ChildrenPageState extends State<ChildrenPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final hasChildren = context.watch<ChildrenProvider>().children.isNotEmpty;
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        title: const Text('Children'),
+        title: Text(l10n.navChildren),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: _openForm,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.add_rounded, size: 16, color: Colors.white),
-                    SizedBox(width: 5),
-                    Text(
-                      'Add',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+          if (hasChildren)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: GestureDetector(
+                onTap: _openForm,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                      const SizedBox(width: 5),
+                      Text(
+                        l10n.commonAdd,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
       body: Consumer<ChildrenProvider>(
@@ -79,14 +84,14 @@ class _ChildrenPageState extends State<ChildrenPage> {
           return RefreshIndicator(
             onRefresh: provider.loadChildren,
             color: AppTheme.primaryColor,
-            child: _buildBody(provider),
+            child: _buildBody(provider, l10n),
           );
         },
       ),
     );
   }
 
-  Widget _buildBody(ChildrenProvider provider) {
+  Widget _buildBody(ChildrenProvider provider, AppLocalizations l10n) {
     if (provider.isLoading && provider.children.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -108,7 +113,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: provider.loadChildren,
-                child: const Text('Retry'),
+                child: Text(l10n.commonRetry),
               ),
             ],
           ),
@@ -127,12 +132,12 @@ class _ChildrenPageState extends State<ChildrenPage> {
           ),
 
         if (children.isEmpty)
-          _buildEmptyState()
+          _buildEmptyState(l10n)
         else ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              '${children.length} ${children.length == 1 ? 'profile' : 'profiles'}',
+              l10n.childrenProfileCount(children.length),
               style: const TextStyle(
                 fontSize: 13,
                 color: AppTheme.textSecondary,
@@ -154,7 +159,7 @@ class _ChildrenPageState extends State<ChildrenPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.only(top: 60),
       child: Column(
@@ -173,25 +178,25 @@ class _ChildrenPageState extends State<ChildrenPage> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'No children yet',
-            style: TextStyle(
+          Text(
+            l10n.childrenNoneYetTitle,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Add a child profile to start\ntracking their growth and nutrition.',
+          Text(
+            l10n.childrenNoneYetSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _openForm,
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Add first child'),
+            label: Text(l10n.childrenAddFirst),
           ),
         ],
       ),
@@ -199,25 +204,24 @@ class _ChildrenPageState extends State<ChildrenPage> {
   }
 
   Future<void> _confirmDelete(ChildProfile child) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete profile?'),
-        content: Text(
-          'Remove ${child.name}\'s profile permanently? This cannot be undone.',
-        ),
+        title: Text(l10n.childrenDeleteTitle),
+        content: Text(l10n.childrenDeleteConfirm(child.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -227,13 +231,13 @@ class _ChildrenPageState extends State<ChildrenPage> {
         await context.read<ChildrenProvider>().deleteChild(child.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${child.name} deleted.')),
+            SnackBar(content: Text(l10n.childrenDeletedMessage(child.name))),
           );
         }
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to delete. Try again.')),
+            SnackBar(content: Text(l10n.childrenDeleteFailed)),
           );
         }
       }
@@ -317,7 +321,7 @@ class _ChildCard extends StatelessWidget {
                   if (child.guardianName.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Guardian: ${child.guardianName}',
+                      AppLocalizations.of(context)!.childrenGuardianLabel(child.guardianName),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppTheme.textTertiary,

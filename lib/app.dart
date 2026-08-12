@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/core/locale/locale_provider.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/theme/theme_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:nutritrack/features/auth/login_page.dart';
 import 'package:nutritrack/features/auth/onboarding_page.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
@@ -28,6 +30,7 @@ import 'package:nutritrack/features/ngo/ngo_dashboard_page.dart';
 import 'package:nutritrack/features/common/alerts_page.dart';
 import 'package:nutritrack/features/common/settings_page.dart';
 import 'package:nutritrack/features/common/about_page.dart';
+import 'package:nutritrack/features/common/sources_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -37,12 +40,16 @@ class NutriGeneApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
     return MaterialApp(
       title: 'NutriGene',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthGate(),
@@ -77,6 +84,7 @@ class NutriGeneApp extends StatelessWidget {
         '/alerts': (context) => const AlertsPage(),
         '/settings': (context) => const SettingsPage(),
         '/about': (context) => const AboutPage(),
+        '/sources': (context) => const SourcesPage(),
       },
     );
   }
@@ -128,6 +136,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
@@ -144,31 +153,31 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard_rounded),
+            label: l10n.navDashboard,
           ),
           NavigationDestination(
-            icon: Icon(Icons.child_care_outlined),
-            selectedIcon: Icon(Icons.child_care_rounded),
-            label: 'Children',
+            icon: const Icon(Icons.child_care_outlined),
+            selectedIcon: const Icon(Icons.child_care_rounded),
+            label: l10n.navChildren,
           ),
           NavigationDestination(
-            icon: Icon(Icons.restaurant_menu_outlined),
-            selectedIcon: Icon(Icons.restaurant_menu_rounded),
-            label: 'Nutrition',
+            icon: const Icon(Icons.restaurant_menu_outlined),
+            selectedIcon: const Icon(Icons.restaurant_menu_rounded),
+            label: l10n.navNutrition,
           ),
           NavigationDestination(
-            icon: Icon(Icons.psychology_outlined),
-            selectedIcon: Icon(Icons.psychology_rounded),
-            label: 'Brain',
+            icon: const Icon(Icons.psychology_outlined),
+            selectedIcon: const Icon(Icons.psychology_rounded),
+            label: l10n.navBrain,
           ),
           NavigationDestination(
-            icon: Icon(Icons.more_horiz_rounded),
-            selectedIcon: Icon(Icons.more_rounded),
-            label: 'More',
+            icon: const Icon(Icons.more_horiz_rounded),
+            selectedIcon: const Icon(Icons.more_rounded),
+            label: l10n.navMore,
           ),
         ],
       ),

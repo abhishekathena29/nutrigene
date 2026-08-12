@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:nutritrack/core/locale/locale_provider.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/theme/theme_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -12,17 +14,18 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
-  String _selectedLanguage = 'English';
   String _selectedUnits = 'Metric';
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final themeProvider = context.watch<ThemeProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        title: const Text('Settings'),
+        title: Text(l10n.moreSettings),
         leading: IconButton(
           icon: Container(
             width: 38,
@@ -44,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          const _SectionLabel(label: 'General'),
+          _SectionLabel(label: l10n.settingsGeneralSection),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
@@ -58,8 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.notifications_outlined,
                   iconColor: AppTheme.primaryColor,
                   iconBg: AppTheme.primarySurface,
-                  title: 'Notifications',
-                  subtitle: 'Receive alerts and reminders',
+                  title: l10n.settingsNotifications,
+                  subtitle: l10n.settingsNotificationsDesc,
                   value: _notificationsEnabled,
                   onChanged: (v) => setState(() => _notificationsEnabled = v),
                 ),
@@ -68,8 +71,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.dark_mode_outlined,
                   iconColor: const Color(0xFF7C3AED),
                   iconBg: const Color(0xFFF5F3FF),
-                  title: 'Dark Mode',
-                  subtitle: 'Use dark theme',
+                  title: l10n.settingsDarkMode,
+                  subtitle: l10n.settingsDarkModeDesc,
                   value: themeProvider.isDarkMode,
                   onChanged: (v) => themeProvider.setDarkMode(v),
                   isLast: true,
@@ -79,39 +82,32 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 20),
 
-          // const _SectionLabel(label: 'Language & Region'),
-          // const SizedBox(height: 10),
-          // Container(
-          //   decoration: BoxDecoration(
-          //     color: AppTheme.surfaceColor,
-          //     borderRadius: BorderRadius.circular(18),
-          //     border: Border.all(color: AppTheme.borderColor),
-          //   ),
-          //   child: Column(
-          //     children: [
-          //       _NavRow(
-          //         icon: Icons.language_rounded,
-          //         iconColor: AppTheme.secondaryColor,
-          //         iconBg: const Color(0xFFEFF6FF),
-          //         title: 'Language',
-          //         value: _selectedLanguage,
-          //         onTap: _showLanguageDialog,
-          //       ),
-          //       const Divider(height: 1, indent: 56),
-          //       _NavRow(
-          //         icon: Icons.straighten_rounded,
-          //         iconColor: const Color(0xFFF97316),
-          //         iconBg: const Color(0xFFFFF7ED),
-          //         title: 'Units',
-          //         value: _selectedUnits,
-          //         onTap: _showUnitsDialog,
-          //         isLast: true,
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          // const SizedBox(height: 20),
-          const _SectionLabel(label: 'Data & Privacy'),
+          _SectionLabel(label: l10n.settingsLanguageSection),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
+            child: Column(
+              children: [
+                _NavRow(
+                  icon: Icons.language_rounded,
+                  iconColor: AppTheme.secondaryColor,
+                  iconBg: const Color(0xFFEFF6FF),
+                  title: l10n.settingsLanguage,
+                  value: localeProvider.locale.languageCode == 'hi'
+                      ? 'हिन्दी'
+                      : 'English',
+                  onTap: () => _showLanguageDialog(localeProvider),
+                  isLast: true,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _SectionLabel(label: l10n.settingsDataPrivacySection),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
@@ -125,10 +121,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.cloud_upload_outlined,
                   iconColor: AppTheme.primaryColor,
                   iconBg: AppTheme.primarySurface,
-                  title: 'Backup Data',
-                  value: 'Save to cloud',
+                  title: l10n.settingsBackupData,
+                  value: l10n.settingsBackupDataValue,
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Backing up data...')),
+                    SnackBar(content: Text(l10n.settingsBackingUp)),
                   ),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -136,10 +132,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.download_rounded,
                   iconColor: AppTheme.secondaryColor,
                   iconBg: const Color(0xFFEFF6FF),
-                  title: 'Export Data',
-                  value: 'Download your data',
+                  title: l10n.settingsExportData,
+                  value: l10n.settingsExportDataValue,
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Exporting data...')),
+                    SnackBar(content: Text(l10n.settingsExporting)),
                   ),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -147,8 +143,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.delete_forever_rounded,
                   iconColor: AppTheme.errorColor,
                   iconBg: const Color(0xFFFEF2F2),
-                  title: 'Clear All Data',
-                  value: 'Permanently delete',
+                  title: l10n.settingsClearAllData,
+                  value: l10n.settingsClearAllDataValue,
                   onTap: _showClearDataDialog,
                   isLast: true,
                   titleColor: AppTheme.errorColor,
@@ -158,7 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 20),
 
-          const _SectionLabel(label: 'Support'),
+          _SectionLabel(label: l10n.settingsSupportSection),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
@@ -172,9 +168,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.help_outline_rounded,
                   iconColor: AppTheme.secondaryColor,
                   iconBg: const Color(0xFFEFF6FF),
-                  title: 'Help Center',
+                  title: l10n.settingsHelpCenter,
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening help center...')),
+                    SnackBar(content: Text(l10n.settingsOpeningHelp)),
                   ),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -182,9 +178,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.feedback_outlined,
                   iconColor: AppTheme.primaryColor,
                   iconBg: AppTheme.primarySurface,
-                  title: 'Send Feedback',
+                  title: l10n.settingsSendFeedback,
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening feedback form...')),
+                    SnackBar(content: Text(l10n.settingsOpeningFeedback)),
                   ),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -192,9 +188,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: Icons.bug_report_outlined,
                   iconColor: const Color(0xFFF97316),
                   iconBg: const Color(0xFFFFF7ED),
-                  title: 'Report a Bug',
+                  title: l10n.settingsReportBug,
                   onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening bug report...')),
+                    SnackBar(content: Text(l10n.settingsOpeningBugReport)),
                   ),
                   isLast: true,
                 ),
@@ -206,29 +202,26 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showLanguageDialog() {
+  void _showLanguageDialog(LocaleProvider localeProvider) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Select Language'),
-          content: RadioGroup<String>(
-            groupValue: _selectedLanguage,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _selectedLanguage = value);
-                Navigator.pop(ctx);
-              }
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: ['English', 'Spanish', 'French']
-                  .map(
-                    (lang) =>
-                        RadioListTile<String>(title: Text(lang), value: lang),
-                  )
-                  .toList(),
-            ),
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsSelectLanguage),
+        content: RadioGroup<String>(
+          groupValue: localeProvider.locale.languageCode,
+          onChanged: (value) {
+            if (value != null) {
+              localeProvider.setLocale(Locale(value));
+              Navigator.pop(ctx);
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(title: Text('English'), value: 'en'),
+              RadioListTile<String>(title: Text('हिन्दी'), value: 'hi'),
+            ],
           ),
         ),
       ),
@@ -269,30 +262,29 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showClearDataDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear All Data?'),
-        content: const Text(
-          'This will permanently delete all data. This action cannot be undone.',
-        ),
+        title: Text(l10n.settingsClearDataTitle),
+        content: Text(l10n.settingsClearDataBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Data cleared successfully')),
+                SnackBar(content: Text(l10n.settingsDataCleared)),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Clear'),
+            child: Text(l10n.settingsClearAction),
           ),
         ],
       ),

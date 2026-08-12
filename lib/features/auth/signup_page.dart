@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class SignupPage extends StatefulWidget {
@@ -37,6 +38,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _handleSignup() async {
+    final l10n = AppLocalizations.of(context)!;
     final auth = context.read<AuthenProvider>();
     auth.clearError();
     final email = _emailController.text.trim();
@@ -46,11 +48,11 @@ class _SignupPageState extends State<SignupPage> {
     final confirmPassword = _confirmController.text.trim();
 
     if (email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      _showMessage('Please complete all required fields.');
+      _showMessage(l10n.signupPleaseComplete);
       return;
     }
     if (password != confirmPassword) {
-      _showMessage('Passwords do not match.');
+      _showMessage(l10n.signupPasswordsMismatch);
       return;
     }
 
@@ -117,6 +119,7 @@ class _SignupPageState extends State<SignupPage> {
       ),
       body: Consumer<AuthenProvider>(
         builder: (context, auth, _) {
+          final l10n = AppLocalizations.of(context)!;
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -134,9 +137,9 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   const SizedBox(height: 24),
                   // Header
-                  const Text(
-                    'Create your\naccount',
-                    style: TextStyle(
+                  Text(
+                    l10n.signupCreateAccountHeader,
+                    style: const TextStyle(
                       fontSize: 38,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
@@ -145,9 +148,9 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Join NutriGene and start supporting children\'s health today.',
-                    style: TextStyle(
+                  Text(
+                    l10n.signupSubtitle,
+                    style: const TextStyle(
                       fontSize: 15,
                       color: AppTheme.textSecondary,
                       height: 1.5,
@@ -156,7 +159,7 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 36),
 
                   // Email
-                  const _FieldLabel(label: 'Email address'),
+                  _FieldLabel(label: l10n.loginEmailLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _emailController,
@@ -170,7 +173,7 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 20),
 
                   // Name row
-                  const _FieldLabel(label: 'Full name'),
+                  _FieldLabel(label: l10n.signupFullNameLabel),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -179,8 +182,8 @@ class _SignupPageState extends State<SignupPage> {
                           controller: _firstNameController,
                           textInputAction: TextInputAction.next,
                           textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            hintText: 'First name',
+                          decoration: InputDecoration(
+                            hintText: l10n.signupFirstNameHint,
                           ),
                         ),
                       ),
@@ -190,8 +193,8 @@ class _SignupPageState extends State<SignupPage> {
                           controller: _lastNameController,
                           textInputAction: TextInputAction.next,
                           textCapitalization: TextCapitalization.words,
-                          decoration: const InputDecoration(
-                            hintText: 'Last name',
+                          decoration: InputDecoration(
+                            hintText: l10n.signupLastNameHint,
                           ),
                         ),
                       ),
@@ -200,14 +203,14 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 20),
 
                   // Password
-                  const _FieldLabel(label: 'Password'),
+                  _FieldLabel(label: l10n.loginPasswordLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      hintText: 'Min. 8 characters',
+                      hintText: l10n.signupPasswordHint,
                       prefixIcon: const Icon(
                         Icons.lock_outline_rounded,
                         size: 20,
@@ -228,7 +231,7 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 20),
 
                   // Confirm password
-                  const _FieldLabel(label: 'Confirm password'),
+                  _FieldLabel(label: l10n.signupConfirmPasswordLabel),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _confirmController,
@@ -236,7 +239,7 @@ class _SignupPageState extends State<SignupPage> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => auth.isLoading ? null : _handleSignup(),
                     decoration: InputDecoration(
-                      hintText: 'Repeat your password',
+                      hintText: l10n.signupConfirmPasswordHint,
                       prefixIcon: const Icon(
                         Icons.lock_outline_rounded,
                         size: 20,
@@ -269,7 +272,7 @@ class _SignupPageState extends State<SignupPage> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Create account'),
+                          : Text(l10n.signupCreateAccountAction),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -283,8 +286,8 @@ class _SignupPageState extends State<SignupPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'or',
-                            style: TextStyle(
+                            l10n.loginOrDivider,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppTheme.textTertiary,
                               fontWeight: FontWeight.w500,
@@ -312,7 +315,7 @@ class _SignupPageState extends State<SignupPage> {
                             color: Colors.white,
                           ),
                         ),
-                        label: const Text('Continue with Google'),
+                        label: Text(l10n.loginContinueWithGoogle),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -320,9 +323,9 @@ class _SignupPageState extends State<SignupPage> {
 
                   // Terms
                   Text(
-                    'By creating an account, you agree to our Terms of Service and Privacy Policy.',
+                    l10n.signupTerms,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textTertiary,
                       height: 1.5,
@@ -334,9 +337,9 @@ class _SignupPageState extends State<SignupPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Already have an account?',
-                        style: TextStyle(color: AppTheme.textSecondary),
+                      Text(
+                        l10n.signupAlreadyHaveAccount,
+                        style: const TextStyle(color: AppTheme.textSecondary),
                       ),
                       TextButton(
                         onPressed: () =>
@@ -344,7 +347,7 @@ class _SignupPageState extends State<SignupPage> {
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                         ),
-                        child: const Text('Sign in'),
+                        child: Text(l10n.loginSignInAction),
                       ),
                     ],
                   ),

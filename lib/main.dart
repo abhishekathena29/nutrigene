@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/app.dart';
+import 'package:nutritrack/core/locale/locale_provider.dart';
 import 'package:nutritrack/core/theme/theme_provider.dart';
 import 'package:nutritrack/firebase_options.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
@@ -15,6 +16,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => AuthenProvider()),
         ChangeNotifierProvider(create: (_) => ChildrenProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()),

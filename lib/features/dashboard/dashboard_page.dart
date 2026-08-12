@@ -2,12 +2,39 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/core/widgets/app_logo.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
+  static const _mealOrder = [
+    'Breakfast',
+    'Mid-Morning',
+    'Lunch',
+    'Afternoon',
+    'Dinner',
+  ];
+
+  static String _mealLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'Breakfast':
+        return l10n.mealBreakfast;
+      case 'Mid-Morning':
+        return l10n.mealMidMorning;
+      case 'Lunch':
+        return l10n.mealLunch;
+      case 'Afternoon':
+        return l10n.mealAfternoon;
+      case 'Dinner':
+        return l10n.mealDinner;
+      default:
+        return key;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
@@ -60,34 +87,34 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeroCard(context),
+            _buildHeroCard(context, l10n),
             const SizedBox(height: 28),
             _buildSectionHeader(
-              'Today\'s Snapshot',
+              l10n.dashboardTodaysSnapshot,
               action: TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/alerts'),
-                child: const Text('View all'),
+                child: Text(l10n.dashboardViewAll),
               ),
             ),
             const SizedBox(height: 14),
-            _buildSnapshotGrid(context),
+            _buildSnapshotGrid(context, l10n),
             const SizedBox(height: 16),
-            _buildTodayMealsCard(context),
+            _buildTodayMealsCard(context, l10n),
             const SizedBox(height: 28),
-            _buildSectionHeader('Key Alerts'),
+            _buildSectionHeader(l10n.dashboardKeyAlerts),
             const SizedBox(height: 14),
             _buildAlertsSection(context),
             const SizedBox(height: 28),
-            _buildSectionHeader('Quick Actions'),
+            _buildSectionHeader(l10n.dashboardQuickActions),
             const SizedBox(height: 14),
-            _buildQuickActions(context),
+            _buildQuickActions(context, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeroCard(BuildContext context) {
+  Widget _buildHeroCard(BuildContext context, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -112,10 +139,10 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Good morning,\nNutriGuardian',
-                  style: TextStyle(
+                  l10n.dashboardGreeting,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -127,7 +154,7 @@ class DashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'AI-curated insights are ready. Keep your little ones thriving.',
+            l10n.dashboardTagline,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 14,
@@ -139,13 +166,13 @@ class DashboardPage extends StatelessWidget {
             children: [
               _HeroBadgeStream(
                 icon: Icons.health_and_safety_outlined,
-                label: 'Wellness logged',
+                label: l10n.dashboardWellnessLogged,
                 collection: 'wellnessLogs',
               ),
               const SizedBox(width: 10),
               _HeroBadgeStream(
                 icon: Icons.local_dining_outlined,
-                label: 'Meals planned',
+                label: l10n.dashboardMealsPlanned,
                 collection: 'mealPlans',
               ),
             ],
@@ -169,7 +196,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'View today\'s focus',
+                    l10n.dashboardViewTodaysFocus,
                     style: TextStyle(
                       color: AppTheme.primaryColor,
                       fontSize: 13,
@@ -191,7 +218,7 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSnapshotGrid(BuildContext context) {
+  Widget _buildSnapshotGrid(BuildContext context, AppLocalizations l10n) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = (constraints.maxWidth - 12) / 2;
@@ -203,7 +230,7 @@ class DashboardPage extends StatelessWidget {
               width: w,
               child: _SnapshotTileStream(
                 icon: Icons.child_care_rounded,
-                label: 'Children',
+                label: l10n.navChildren,
                 collection: 'children',
                 color: AppTheme.primaryColor,
               ),
@@ -212,7 +239,7 @@ class DashboardPage extends StatelessWidget {
               width: w,
               child: _SnapshotTileStream(
                 icon: Icons.restaurant_menu_rounded,
-                label: 'Meals',
+                label: l10n.dashboardMealsLabel,
                 collection: 'mealPlans',
                 color: AppTheme.secondaryColor,
               ),
@@ -221,7 +248,7 @@ class DashboardPage extends StatelessWidget {
               width: w,
               child: _SnapshotTileStream(
                 icon: Icons.psychology_rounded,
-                label: 'Activities',
+                label: l10n.dashboardActivitiesLabel,
                 collection: 'activities',
                 color: const Color(0xFF6366F1),
               ),
@@ -232,7 +259,7 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTodayMealsCard(BuildContext context) {
+  Widget _buildTodayMealsCard(BuildContext context, AppLocalizations l10n) {
     final day = _todayKey();
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
@@ -243,8 +270,9 @@ class DashboardPage extends StatelessWidget {
         final data = snapshot.data?.data() ?? {};
         final Map<String, dynamic> meals =
             (data['meals'] as Map<String, dynamic>?) ?? {};
-        final entries = meals.entries
-            .where((e) => e.value.toString().trim().isNotEmpty)
+        final entries = _mealOrder
+            .where((label) => (meals[label]?.toString().trim() ?? '').isNotEmpty)
+            .map((label) => MapEntry(label, meals[label]))
             .toList();
 
         return Container(
@@ -272,9 +300,9 @@ class DashboardPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Today\'s meals',
-                    style: TextStyle(
+                  Text(
+                    l10n.dashboardTodaysMeals,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -287,7 +315,7 @@ class DashboardPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    'No meals planned for today',
+                    l10n.dashboardNoMealsPlanned,
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textTertiary,
@@ -316,7 +344,7 @@ class DashboardPage extends StatelessWidget {
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${e.key}: ',
+                                  text: '${_mealLabel(l10n, e.key)}: ',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -346,6 +374,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildAlertsSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('alerts')
@@ -385,9 +414,9 @@ class DashboardPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'You\'re all caught up — no alerts.',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                Text(
+                  l10n.dashboardAllCaughtUp,
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                 ),
               ],
             ),
@@ -492,13 +521,13 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
           child: _QuickActionCard(
             icon: Icons.restaurant_menu_rounded,
-            label: 'Meal Plans',
+            label: l10n.dashboardMealPlansAction,
             color: const Color(0xFFF97316),
             bgColor: const Color(0xFFFFF7ED),
             onTap: () => Navigator.pushNamed(context, '/nutrition/meal-plan'),
@@ -508,7 +537,7 @@ class DashboardPage extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.psychology_rounded,
-            label: 'Brain Tips',
+            label: l10n.dashboardBrainTipsAction,
             color: const Color(0xFF6366F1),
             bgColor: const Color(0xFFEEF2FF),
             onTap: () => Navigator.pushNamed(context, '/brain/nutrition-tips'),
@@ -518,7 +547,7 @@ class DashboardPage extends StatelessWidget {
         Expanded(
           child: _QuickActionCard(
             icon: Icons.monitor_weight_outlined,
-            label: 'Growth',
+            label: l10n.dashboardGrowthAction,
             color: AppTheme.primaryColor,
             bgColor: AppTheme.primarySurface,
             onTap: () => Navigator.pushNamed(context, '/home'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
 
 class BrainNutritionTipsPage extends StatelessWidget {
   const BrainNutritionTipsPage({super.key});
@@ -71,6 +72,8 @@ class BrainNutritionTipsPage extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          const SourcesLink(),
           const SizedBox(height: 24),
 
           const _SectionTitle(title: 'Essential Nutrients'),

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
 import 'package:nutritrack/features/auth/provider/auth_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class MorePage extends StatelessWidget {
@@ -9,6 +10,7 @@ class MorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.isNotEmpty == true
         ? user!.displayName!
@@ -19,7 +21,7 @@ class MorePage extends StatelessWidget {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        title: const Text('Profile'),
+        title: Text(l10n.moreTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -34,9 +36,16 @@ class MorePage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.primarySurface,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.3), width: 2),
+                    border: Border.all(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
                   ),
-                  child: const Icon(Icons.person_rounded, size: 40, color: AppTheme.primaryColor),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    size: 40,
+                    color: AppTheme.primaryColor,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -51,11 +60,17 @@ class MorePage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   email,
-                  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: user?.emailVerified == true
                         ? AppTheme.primarySurface
@@ -76,7 +91,9 @@ class MorePage extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        user?.emailVerified == true ? 'Verified' : 'Not verified',
+                        user?.emailVerified == true
+                            ? l10n.moreVerified
+                            : l10n.moreNotVerified,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -102,9 +119,18 @@ class MorePage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _InfoRow(icon: Icons.person_outline_rounded, label: 'Name', value: displayName),
+                _InfoRow(
+                  icon: Icons.person_outline_rounded,
+                  label: l10n.moreNameLabel,
+                  value: displayName,
+                ),
                 const Divider(height: 1, indent: 56),
-                _InfoRow(icon: Icons.email_outlined, label: 'Email', value: email, isLast: true),
+                _InfoRow(
+                  icon: Icons.email_outlined,
+                  label: l10n.moreEmailLabel,
+                  value: email,
+                  isLast: true,
+                ),
               ],
             ),
           ),
@@ -123,7 +149,7 @@ class MorePage extends StatelessWidget {
                   icon: Icons.business_rounded,
                   iconColor: const Color(0xFF6366F1),
                   iconBg: const Color(0xFFEEF2FF),
-                  label: 'NGO Dashboard',
+                  label: l10n.moreNgoDashboard,
                   onTap: () => Navigator.pushNamed(context, '/ngo/dashboard'),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -131,7 +157,7 @@ class MorePage extends StatelessWidget {
                   icon: Icons.settings_outlined,
                   iconColor: AppTheme.textSecondary,
                   iconBg: AppTheme.inputFill,
-                  label: 'Settings',
+                  label: l10n.moreSettings,
                   onTap: () => Navigator.pushNamed(context, '/settings'),
                 ),
                 const Divider(height: 1, indent: 56),
@@ -139,8 +165,16 @@ class MorePage extends StatelessWidget {
                   icon: Icons.info_outline_rounded,
                   iconColor: AppTheme.secondaryColor,
                   iconBg: const Color(0xFFEFF6FF),
-                  label: 'About NutriGene',
+                  label: l10n.moreAboutNutriGene,
                   onTap: () => Navigator.pushNamed(context, '/about'),
+                ),
+                const Divider(height: 1, indent: 56),
+                _NavRow(
+                  icon: Icons.menu_book_outlined,
+                  iconColor: AppTheme.primaryColor,
+                  iconBg: AppTheme.primarySurface,
+                  label: l10n.moreSourcesReferences,
+                  onTap: () => Navigator.pushNamed(context, '/sources'),
                   isLast: true,
                 ),
               ],
@@ -156,16 +190,19 @@ class MorePage extends StatelessWidget {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Sign out?'),
-                    content: const Text('You will be returned to the login screen.'),
+                    title: Text(l10n.moreSignOutTitle),
+                    content: Text(l10n.moreSignOutBody),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.commonCancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Sign out', style: TextStyle(color: AppTheme.errorColor)),
+                        child: Text(
+                          l10n.moreSignOutAction,
+                          style: const TextStyle(color: AppTheme.errorColor),
+                        ),
                       ),
                     ],
                   ),
@@ -173,7 +210,9 @@ class MorePage extends StatelessWidget {
                 if (confirmed == true && context.mounted) {
                   await context.read<AuthenProvider>().signOut();
                   if (context.mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/', (route) => false);
                   }
                 }
               },
@@ -181,11 +220,16 @@ class MorePage extends StatelessWidget {
                 foregroundColor: AppTheme.errorColor,
                 side: const BorderSide(color: Color(0xFFFECACA)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 backgroundColor: const Color(0xFFFEF2F2),
               ),
               icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Sign Out', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              label: Text(
+                l10n.moreSignOutAction,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -196,12 +240,15 @@ class MorePage extends StatelessWidget {
               onPressed: () => _handleDeleteAccount(context),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.errorColor,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               icon: const Icon(Icons.delete_forever_rounded, size: 18),
-              label: const Text(
-                'Delete Account',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              label: Text(
+                l10n.moreDeleteAccountAction,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -218,24 +265,22 @@ class MorePage extends StatelessWidget {
   }
 
   Future<void> _handleDeleteAccount(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: const Text(
-          'This will permanently delete your account and cannot be undone. '
-          'All associated data will be lost.',
-        ),
+        title: Text(l10n.moreDeleteAccountTitle),
+        content: Text(l10n.moreDeleteAccountBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: AppTheme.errorColor),
+            child: Text(
+              l10n.commonDelete,
+              style: const TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
@@ -291,11 +336,21 @@ class _InfoRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textTertiary,
+                ),
+              ),
               const SizedBox(height: 1),
               Text(
                 value,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ],
           ),
@@ -351,7 +406,11 @@ class _NavRow extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textTertiary),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.textTertiary,
+            ),
           ],
         ),
       ),

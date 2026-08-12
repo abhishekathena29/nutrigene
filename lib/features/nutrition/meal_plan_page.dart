@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nutritrack/core/theme/app_theme.dart';
+import 'package:nutritrack/core/widgets/sources_link.dart';
 import 'package:nutritrack/features/nutrition/provider/nutrition_provider.dart';
+import 'package:nutritrack/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 class MealPlanPage extends StatefulWidget {
@@ -27,6 +29,44 @@ class _MealPlanPageState extends State<MealPlanPage> {
     ('Dinner', '7:00 PM', Icons.dinner_dining_rounded, AppTheme.secondaryColor),
   ];
 
+  static String _dayLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'Monday':
+        return l10n.dayMonday;
+      case 'Tuesday':
+        return l10n.dayTuesday;
+      case 'Wednesday':
+        return l10n.dayWednesday;
+      case 'Thursday':
+        return l10n.dayThursday;
+      case 'Friday':
+        return l10n.dayFriday;
+      case 'Saturday':
+        return l10n.daySaturday;
+      case 'Sunday':
+        return l10n.daySunday;
+      default:
+        return key;
+    }
+  }
+
+  static String _mealLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'Breakfast':
+        return l10n.mealBreakfast;
+      case 'Mid-Morning':
+        return l10n.mealMidMorning;
+      case 'Lunch':
+        return l10n.mealLunch;
+      case 'Afternoon':
+        return l10n.mealAfternoon;
+      case 'Dinner':
+        return l10n.mealDinner;
+      default:
+        return key;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +80,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<NutritionProvider>();
     final mealPlan = provider.mealPlans[_selectedDay];
 
@@ -47,7 +88,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         backgroundColor: AppTheme.backgroundColor,
-        title: const Text('Meal Plans'),
+        title: Text(l10n.mealPlanTitle),
         leading: IconButton(
           icon: Container(
             width: 38,
@@ -67,7 +108,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
               icon: const Icon(Icons.delete_outline_rounded),
               color: AppTheme.errorColor,
               onPressed: () => _confirmDeletePlan(context),
-              tooltip: 'Delete plan',
+              tooltip: l10n.mealPlanDeletePlanTooltip,
             ),
           IconButton(
             icon: provider.loadingPlans
@@ -88,7 +129,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
             : const Icon(Icons.auto_awesome_rounded),
-        label: const Text('AI Generate'),
+        label: Text(l10n.mealPlanAiGenerate),
       ),
       body: Column(
         children: [
@@ -107,6 +148,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   final day = _days[i];
                   final isSelected = day == _selectedDay;
                   final hasData = provider.mealPlans[day] != null;
+                  final dayLabel = _dayLabel(l10n, day);
                   return GestureDetector(
                     onTap: () => setState(() => _selectedDay = day),
                     child: AnimatedContainer(
@@ -123,7 +165,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            day.substring(0, 3),
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? dayLabel.substring(0, 3)
+                                : dayLabel,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -180,11 +224,13 @@ class _MealPlanPageState extends State<MealPlanPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
               children: [
+                const SourcesLink(),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _selectedDay,
+                      _dayLabel(l10n, _selectedDay),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -203,11 +249,12 @@ class _MealPlanPageState extends State<MealPlanPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _MealCard(
-                        mealType: label,
+                        mealType: _mealLabel(l10n, label),
                         time: time,
                         icon: icon,
                         color: color,
                         description: desc,
+                        notSetLabel: l10n.mealPlanNotSet,
                         onEdit: () => _editMeal(label, desc),
                       ),
                     );
@@ -252,19 +299,19 @@ class _MealPlanPageState extends State<MealPlanPage> {
                       children: [
                         const Icon(Icons.restaurant_menu_rounded, size: 48, color: AppTheme.textTertiary),
                         const SizedBox(height: 16),
-                        const Text(
-                          'No meal plan for this day',
-                          style: TextStyle(
+                        Text(
+                          l10n.mealPlanNoPlanTitle,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Generate an AI-powered plan or create one manually.',
+                        Text(
+                          l10n.mealPlanNoPlanSubtitle,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton.icon(
@@ -272,7 +319,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                               ? null
                               : () => _promptForGeneration(context),
                           icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                          label: const Text('Generate with AI'),
+                          label: Text(l10n.mealPlanGenerateWithAi),
                         ),
                         const SizedBox(height: 10),
                         OutlinedButton.icon(
@@ -280,7 +327,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
                               ? null
                               : () => _promptForManualPlan(context),
                           icon: const Icon(Icons.edit_rounded, size: 18),
-                          label: const Text('Create manually'),
+                          label: Text(l10n.mealPlanCreateManually),
                         ),
                       ],
                     ),
@@ -295,6 +342,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
   }
 
   Future<void> _promptForGeneration(BuildContext ctx) async {
+    final l10n = AppLocalizations.of(ctx)!;
     final preferencesController = TextEditingController();
     final ageController = TextEditingController(text: '5 years');
     final provider = ctx.read<NutritionProvider>();
@@ -302,27 +350,30 @@ class _MealPlanPageState extends State<MealPlanPage> {
       context: ctx,
       builder: (dlgCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Generate with AI'),
+        title: Text(l10n.mealPlanGenerateWithAi),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: ageController,
-              decoration: const InputDecoration(labelText: 'Child age', hintText: 'e.g. 5 years'),
+              decoration: InputDecoration(
+                labelText: l10n.mealPlanChildAgeLabel,
+                hintText: l10n.mealPlanChildAgeHint,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: preferencesController,
-              decoration: const InputDecoration(
-                labelText: 'Preferences or restrictions',
-                hintText: 'e.g. vegetarian, no nuts',
+              decoration: InputDecoration(
+                labelText: l10n.mealPlanPreferencesLabel,
+                hintText: l10n.mealPlanPreferencesHint,
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: const Text('Generate')),
+          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: Text(l10n.commonCancel)),
+          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: Text(l10n.mealPlanGenerateAction)),
         ],
       ),
     );
@@ -333,11 +384,12 @@ class _MealPlanPageState extends State<MealPlanPage> {
         preferences: preferencesController.text.isEmpty ? null : preferencesController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Meal plan saved')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.mealPlanSavedMessage)));
     }
   }
 
   Future<void> _promptForManualPlan(BuildContext ctx) async {
+    final l10n = AppLocalizations.of(ctx)!;
     final controllers = {
       'Breakfast': TextEditingController(),
       'Mid-Morning': TextEditingController(),
@@ -352,7 +404,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
       context: ctx,
       builder: (dlgCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Create plan for $_selectedDay'),
+        title: Text(l10n.mealPlanCreateForDay(_dayLabel(l10n, _selectedDay))),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -362,20 +414,20 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: TextField(
                     controller: e.value,
-                    decoration: InputDecoration(labelText: e.key),
+                    decoration: InputDecoration(labelText: _mealLabel(l10n, e.key)),
                   ),
                 ),
               ),
               TextField(
                 controller: noteController,
-                decoration: const InputDecoration(labelText: 'Note (optional)'),
+                decoration: InputDecoration(labelText: l10n.mealPlanNoteLabel),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: const Text('Save')),
+          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: Text(l10n.commonCancel)),
+          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: Text(l10n.commonSave)),
         ],
       ),
     );
@@ -386,25 +438,27 @@ class _MealPlanPageState extends State<MealPlanPage> {
         aiNote: noteController.text.trim().isEmpty ? null : noteController.text.trim(),
       ));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Meal plan saved')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.mealPlanSavedMessage)));
     }
   }
 
   Future<void> _editMeal(String mealType, String existing) async {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.read<NutritionProvider>();
     final controller = TextEditingController(text: existing);
+    final mealTypeLabel = _mealLabel(l10n, mealType);
     final shouldSave = await showDialog<bool>(
       context: context,
       builder: (dlgCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Edit $mealType'),
+        title: Text(l10n.mealPlanEditTitle(mealTypeLabel)),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Meal description'),
+          decoration: InputDecoration(labelText: l10n.mealPlanDescriptionLabel),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: const Text('Save')),
+          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: Text(l10n.commonCancel)),
+          ElevatedButton(onPressed: () => Navigator.pop(dlgCtx, true), child: Text(l10n.commonSave)),
         ],
       ),
     );
@@ -418,24 +472,25 @@ class _MealPlanPageState extends State<MealPlanPage> {
         MealPlan(day: _selectedDay, meals: updatedMeals, aiNote: current?.aiNote),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$mealType updated')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.mealPlanUpdatedMessage(mealTypeLabel))));
     }
   }
 
   Future<void> _confirmDeletePlan(BuildContext ctx) async {
+    final l10n = AppLocalizations.of(ctx)!;
     final provider = ctx.read<NutritionProvider>();
     final confirm = await showDialog<bool>(
       context: ctx,
       builder: (dlgCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete meal plan?'),
-        content: Text('Remove meal plan for $_selectedDay?'),
+        title: Text(l10n.mealPlanDeleteConfirmTitle),
+        content: Text(l10n.mealPlanDeleteConfirmBody(_dayLabel(l10n, _selectedDay))),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: Text(l10n.commonCancel)),
           ElevatedButton(
             onPressed: () => Navigator.pop(dlgCtx, true),
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorColor),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -443,7 +498,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
     if (confirm == true) {
       await provider.deleteMealPlan(_selectedDay);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Meal plan deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.mealPlanDeletedMessage)));
     }
   }
 }
@@ -455,6 +510,7 @@ class _MealCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.description,
+    required this.notSetLabel,
     required this.onEdit,
   });
 
@@ -463,6 +519,7 @@ class _MealCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String description;
+  final String notSetLabel;
   final VoidCallback onEdit;
 
   @override
@@ -510,7 +567,7 @@ class _MealCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  hasDesc ? description : 'Not set — tap to add',
+                  hasDesc ? description : notSetLabel,
                   style: TextStyle(
                     fontSize: 13,
                     color: hasDesc ? AppTheme.textSecondary : AppTheme.textTertiary,
